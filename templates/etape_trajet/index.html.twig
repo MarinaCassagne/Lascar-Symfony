@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}EtapeTrajet index{% endblock %}
+
+{% block body %}
+    <h1>EtapeTrajet index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Latitude_etape</th>
+                <th>Longitude_etape</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for etape_trajet in etape_trajets %}
+            <tr>
+                <td>{{ etape_trajet.id }}</td>
+                <td>{{ etape_trajet.latitudeEtape }}</td>
+                <td>{{ etape_trajet.longitudeEtape }}</td>
+                <td>
+                    <a href="{{ path('app_etape_trajet_show', {'id': etape_trajet.id}) }}">show</a>
+                    <a href="{{ path('app_etape_trajet_edit', {'id': etape_trajet.id}) }}">edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="4">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_etape_trajet_new') }}">Create new</a>
+{% endblock %}

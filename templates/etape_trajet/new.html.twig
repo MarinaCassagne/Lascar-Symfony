@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}New EtapeTrajet{% endblock %}
+
+{% block body %}
+    <h1>Create new EtapeTrajet</h1>
+
+    {{ include('etape_trajet/_form.html.twig') }}
+
+    <a href="{{ path('app_etape_trajet_index') }}">back to list</a>
+{% endblock %}
