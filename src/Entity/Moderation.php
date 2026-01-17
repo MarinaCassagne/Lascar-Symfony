@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Entity;
+namespace App\Entity;//Le début du fichier (les bases)
 
 use App\Enum\CanalDeModeration;
 use App\Enum\TypeActionModeration;
 use App\Enum\TypeCible;
 use App\Repository\ModerationRepository;
 use Doctrine\DBAL\Types\Types;
-use Doctrine\ORM\Mapping as ORM;
+use Doctrine\ORM\Mapping as ORM;//Ça dit juste où se trouve la classe dans le projet
 
 #[ORM\Entity(repositoryClass: ModerationRepository::class)]
 class Moderation

@@ -8,4 +8,6 @@ enum TypeActionModeration: string
     case Supprime = 'Supprimé';
     case Rejete = 'Rejeté';
     case Suspendu = 'Suspendu';
+    case AVERTIR = 'avertir';//Rajout
+
 }

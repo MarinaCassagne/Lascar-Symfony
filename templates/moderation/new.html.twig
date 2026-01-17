@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}New Moderation{% endblock %}
+
+{% block body %}
+    <h1>Create new Moderation</h1>
+
+    {{ include('moderation/_form.html.twig') }}
+
+    <a href="{{ path('app_moderation_index') }}">back to list</a>
+{% endblock %}
