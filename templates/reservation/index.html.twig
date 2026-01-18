@@ -1,0 +1,59 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Reservation index{% endblock %}
+
+{% block body %}
+    <h1>Reservation index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Numero_reservation</th>
+                <th>Date_reservation</th>
+                <th>Longitude_point_de_depart_passager</th>
+                <th>Latitude_point_de_depart_passager</th>
+                <th>Longitude_point_arrive_passager</th>
+                <th>Latitude_point_arrive_passager</th>
+                <th>Longitude_point_de_rdv_passager</th>
+                <th>Latitude_point_de_rdv_passager</th>
+                <th>Date_heure_depart</th>
+                <th>Date_heure_arrive</th>
+                <th>Nombre_de_passager</th>
+                <th>Montant_total_reservation</th>
+                <th>Statut_reservation</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for reservation in reservations %}
+            <tr>
+                <td>{{ reservation.id }}</td>
+                <td>{{ reservation.numeroReservation }}</td>
+                <td>{{ reservation.dateReservation ? reservation.dateReservation|date('Y-m-d H:i:s') : '' }}</td>
+                <td>{{ reservation.longitudePointDeDepartPassager }}</td>
+                <td>{{ reservation.latitudePointDeDepartPassager }}</td>
+                <td>{{ reservation.longitudePointArrivePassager }}</td>
+                <td>{{ reservation.latitudePointArrivePassager }}</td>
+                <td>{{ reservation.longitudePointDeRdvPassager }}</td>
+                <td>{{ reservation.latitudePointDeRdvPassager }}</td>
+                <td>{{ reservation.dateHeureDepart ? reservation.dateHeureDepart|date('Y-m-d H:i:s') : '' }}</td>
+                <td>{{ reservation.dateHeureArrive ? reservation.dateHeureArrive|date('Y-m-d H:i:s') : '' }}</td>
+                <td>{{ reservation.nombreDePassager }}</td>
+                <td>{{ reservation.montantTotalReservation }}</td>
+                <td>{{ reservation.statutReservation }}</td>
+                <td>
+                    <a href="{{ path('app_reservation_show', {'id': reservation.id}) }}">show</a>
+                    <a href="{{ path('app_reservation_edit', {'id': reservation.id}) }}">edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="15">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_reservation_new') }}">Create new</a>
+{% endblock %}
