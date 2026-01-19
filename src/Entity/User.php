@@ -161,10 +161,18 @@ class User
         return $this;
     }
 
+
     public function isPermisDeConduire(): ?bool
     {
         return $this->permis_de_conduire;
     }
+
+
+        public function getPermisDeConduire(): ?bool
+    {
+        return $this->permis_de_conduire;
+    }
+
 
     public function setPermisDeConduire(?bool $permis_de_conduire): static
     {
@@ -177,6 +185,12 @@ class User
     {
         return $this->compteValide;
     }
+
+            public function getCompteValide(): ?bool
+    {
+        return $this->compteValide;
+    }
+
 
     public function setCompteValide(bool $compteValide): static
     {

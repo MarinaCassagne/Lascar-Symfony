@@ -38,7 +38,7 @@ class UserController extends AbstractController
         return $this->json($this->serializeUser($user));
     }
 
-    #[Route('/api/users', name: 'api_users_create', methods: ['POST'])]
+    #[Route('/api/users/register', name: 'api_users_create', methods: ['POST'])]
     public function create(Request $request, EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordHasher): JsonResponse
     {
         $data = $this->decodeJson($request);
@@ -56,7 +56,7 @@ class UserController extends AbstractController
             return $this->errorResponse('Prenom is required.', Response::HTTP_BAD_REQUEST);
         }
 
-        $age = trim((string) ($data['age'] ?? ''));
+        $age = trim((int) ($data['age'] ?? ''));
         if ($age === '') {
             return $this->errorResponse('age is required.', Response::HTTP_BAD_REQUEST);
         }
@@ -71,17 +71,15 @@ class UserController extends AbstractController
             return $this->errorResponse('Email is required.', Response::HTTP_BAD_REQUEST);
         }
 
-        $permis_de_conduire = trim((string) ($data['permis_de_conduire'] ?? ''));
-        if ($permis_de_conduire === '') {
-            return $this->errorResponse('permis de conduire is required.', Response::HTTP_BAD_REQUEST);
-        }
+        $permis_de_conduire = trim((bool) ($data['permis_de_conduire'] ?? ''));
+        
 
         $mot_de_passe = trim((string) ($data['mot_de_passe'] ?? ''));
         if ($mot_de_passe === '') {
             return $this->errorResponse('mot de passe is required.', Response::HTTP_BAD_REQUEST);
         }
 
-        $compte_valide = trim((string) ($data['compte_valide'] ?? ''));
+        $compte_valide = trim((bool) ($data['compte_valide'] ?? ''));
         if ($compte_valide === '') {
             return $this->errorResponse('Compte valide is required.', Response::HTTP_BAD_REQUEST);
         }
@@ -97,12 +95,6 @@ class UserController extends AbstractController
             ->setCompteValide($compte_valide)
             ->setMotDePasse($mot_de_passe);
 
-        $hashedPassword = $passwordHasher->hashPassword(
-            $user,
-            $mot_de_passe
-        );
-
-        $user->setMotDePasse($hashedPassword);
 
         $entityManager->persist($user);
         $entityManager->flush();
@@ -235,7 +227,7 @@ class UserController extends AbstractController
             'permis_de_conduire' => $user->getPermisDeConduire(),
             'compte_valide' => $user->getCompteValide(),
             'solde' => $user->getSolde(),
-            'createdAt' => $user->getCreatedAt()->format(\DateTimeInterface::ATOM),
+
         ];
     }
 
