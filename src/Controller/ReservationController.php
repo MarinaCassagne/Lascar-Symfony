@@ -54,7 +54,7 @@ class ReservationController extends AbstractController
         }
 
         // Validation des dates
-        $dateReservation = new \DateTime(); 
+        $dateReservation = new \DateTime();
 
         $dateHeureDepart = $this->parseDateTime($data['date_heure_depart'] ?? null, $error);
         if ($dateHeureDepart === null) {
@@ -110,16 +110,25 @@ class ReservationController extends AbstractController
         }
 
         // Validation du statut
-        $statutReservation = $this->parseStatut($data['statut_reservation'] ?? null, $error);
-        if ($statutReservation === null) {
-            return $this->errorResponse($error ?? 'Invalid statut_reservation.', Response::HTTP_BAD_REQUEST);
+        if (!isset($data['statut_reservation'])) {
+            return $this->errorResponse('Statut reservation is required.', Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $statutReservation = StatutReservation::from($data['statut_reservation']);
+        } catch (\ValueError) {
+            return $this->errorResponse(
+                'Invalid statut_reservation. Accepted values: ' .
+                implode(', ', array_map(fn($case) => $case->value, StatutReservation::cases())),
+                Response::HTTP_BAD_REQUEST
+            );
         }
 
         if (!isset($data['user_id'])) {
             return $this->errorResponse('User ID is required.', Response::HTTP_BAD_REQUEST);
         }
 
-        $user = $entityManager->find(User::class,$data['user_id']);
+        $user = $entityManager->find(User::class, $data['user_id']);
         if (!$user) {
             return $this->errorResponse('User not found.', Response::HTTP_BAD_REQUEST);
         }
@@ -376,21 +385,6 @@ class ReservationController extends AbstractController
         }
 
         return (int) $value;
-    }
-
-    private function parseStatut(mixed $value, ?string &$error): ?StatutReservation
-    {
-        if ($value === null || $value === '') {
-            $error = 'Statut reservation is required.';
-            return null;
-        }
-
-        try {
-            return StatutReservation::from($value);
-        } catch (\ValueError $e) {
-            $error = 'Invalid statut_reservation. Accepted values: ' . implode(', ', array_map(fn($case) => $case->value, StatutReservation::cases()));
-            return null;
-        }
     }
 
     private function serializeReservation(Reservation $reservation): array
