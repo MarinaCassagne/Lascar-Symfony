@@ -1,82 +1,100 @@
 <?php
 
 namespace App\Controller;
-// c'était App\Controller\Api donc ça marchait pas :(
 
 use App\Entity\EtapeTrajet;
-use App\Form\EtapeTrajetType;
 use App\Repository\EtapeTrajetRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route('/etape/trajet')]
+#[Route('/api/etape-trajets')]
 final class EtapeTrajetController extends AbstractController
 {
-    #[Route(name: 'app_etape_trajet_index', methods: ['GET'])]
-    public function index(EtapeTrajetRepository $etapeTrajetRepository): Response
+    #[Route('', name: 'api_etape_trajet_index', methods: ['GET'])]
+    public function index(EtapeTrajetRepository $repo): JsonResponse
     {
-        return $this->render('etape_trajet/index.html.twig', [
-            'etape_trajets' => $etapeTrajetRepository->findAll(),
-        ]);
+        $items = $repo->findAll();
+
+        // Si tu as le Serializer + groupes, tu peux renvoyer directement $items
+        // return $this->json($items, 200, [], ['groups' => ['etape_trajet:read']]);
+
+        return $this->json(array_map(fn(EtapeTrajet $e) => $this->toDto($e), $items));
     }
 
-    #[Route('/new', name: 'app_etape_trajet_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    #[Route('/{id}', name: 'api_etape_trajet_show', methods: ['GET'])]
+    public function show(EtapeTrajet $etapeTrajet): JsonResponse
     {
-        $etapeTrajet = new EtapeTrajet();
-        $form = $this->createForm(EtapeTrajetType::class, $etapeTrajet);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($etapeTrajet);
-            $entityManager->flush();
-
-            return $this->redirectToRoute('app_etape_trajet_index', [], Response::HTTP_SEE_OTHER);
-        }
-
-        return $this->render('etape_trajet/new.html.twig', [
-            'etape_trajet' => $etapeTrajet,
-            'form' => $form,
-        ]);
+        return $this->json($this->toDto($etapeTrajet));
     }
 
-    #[Route('/{id}', name: 'app_etape_trajet_show', methods: ['GET'])]
-    public function show(EtapeTrajet $etapeTrajet): Response
+    #[Route('', name: 'api_etape_trajet_create', methods: ['POST'])]
+    public function create(Request $request, EntityManagerInterface $em): JsonResponse
     {
-        return $this->render('etape_trajet/show.html.twig', [
-            'etape_trajet' => $etapeTrajet,
-        ]);
+        $data = $request->toArray();
+
+        $etape = new EtapeTrajet();
+
+        // TODO: mappe tes champs réels ici
+        // $etape->setNom($data['nom'] ?? null);
+        // $etape->setOrdre((int)($data['ordre'] ?? 0));
+        // ...
+
+        $em->persist($etape);
+        $em->flush();
+
+        return $this->json($this->toDto($etape), Response::HTTP_CREATED);
     }
 
-    #[Route('/{id}/edit', name: 'app_etape_trajet_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, EtapeTrajet $etapeTrajet, EntityManagerInterface $entityManager): Response
+    #[Route('/{id}', name: 'api_etape_trajet_update', methods: ['PUT'])]
+    public function update(Request $request, EtapeTrajet $etapeTrajet, EntityManagerInterface $em): JsonResponse
     {
-        $form = $this->createForm(EtapeTrajetType::class, $etapeTrajet);
-        $form->handleRequest($request);
+        $data = $request->toArray();
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->flush();
+        // TODO: mappe tes champs réels ici (PUT = remplace, donc souvent on exige tout)
+        // $etapeTrajet->setNom($data['nom']);
+        // $etapeTrajet->setOrdre((int)$data['ordre']);
+        // ...
 
-            return $this->redirectToRoute('app_etape_trajet_index', [], Response::HTTP_SEE_OTHER);
-        }
+        $em->flush();
 
-        return $this->render('etape_trajet/edit.html.twig', [
-            'etape_trajet' => $etapeTrajet,
-            'form' => $form,
-        ]);
+        return $this->json($this->toDto($etapeTrajet));
     }
 
-    #[Route('/{id}', name: 'app_etape_trajet_delete', methods: ['POST'])]
-    public function delete(Request $request, EtapeTrajet $etapeTrajet, EntityManagerInterface $entityManager): Response
+    #[Route('/{id}', name: 'api_etape_trajet_patch', methods: ['PATCH'])]
+    public function patch(Request $request, EtapeTrajet $etapeTrajet, EntityManagerInterface $em): JsonResponse
     {
-        if ($this->isCsrfTokenValid('delete'.$etapeTrajet->getId(), $request->getPayload()->getString('_token'))) {
-            $entityManager->remove($etapeTrajet);
-            $entityManager->flush();
-        }
+        $data = $request->toArray();
 
-        return $this->redirectToRoute('app_etape_trajet_index', [], Response::HTTP_SEE_OTHER);
+        // PATCH = partiel : tu ne set que si présent
+        // if (array_key_exists('nom', $data)) $etapeTrajet->setNom($data['nom']);
+        // if (array_key_exists('ordre', $data)) $etapeTrajet->setOrdre((int)$data['ordre']);
+        // ...
+
+        $em->flush();
+
+        return $this->json($this->toDto($etapeTrajet));
+    }
+
+    #[Route('/{id}', name: 'api_etape_trajet_delete', methods: ['DELETE'])]
+    public function delete(EtapeTrajet $etapeTrajet, EntityManagerInterface $em): JsonResponse
+    {
+        $em->remove($etapeTrajet);
+        $em->flush();
+
+        return $this->json(null, Response::HTTP_NO_CONTENT);
+    }
+
+    private function toDto(EtapeTrajet $e): array
+    {
+        return [
+            'id' => $e->getId(),
+            // TODO: expose tes champs
+            // 'nom' => $e->getNom(),
+            // 'ordre' => $e->getOrdre(),
+        ];
     }
 }
