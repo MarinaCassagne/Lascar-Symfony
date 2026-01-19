@@ -1,6 +1,7 @@
 <?php
 
-namespace App\Controller\Api;
+namespace App\Controller;
+// c'était App\Controller\Api donc ça marchait pas :(
 
 use App\Entity\Moderation;
 use App\Repository\ModerationRepository;
