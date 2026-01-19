@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Reservation;
 use App\Enum\StatutReservation;
 use App\Repository\ReservationRepository;
+use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -46,16 +47,13 @@ class ReservationController extends AbstractController
         }
 
         // Validation du numéro de réservation
-        $numeroReservation = trim((string)($data['numero_reservation'] ?? ''));
+        $numeroReservation = trim((string) ($data['numero_reservation'] ?? ''));
         if ($numeroReservation === '') {
             return $this->errorResponse('Numero de reservation is required.', Response::HTTP_BAD_REQUEST);
         }
 
         // Validation des dates
-        $dateReservation = $this->parseDateTime($data['date_reservation'] ?? null, $error);
-        if ($dateReservation === null) {
-            return $this->errorResponse($error ?? 'Invalid date_reservation.', Response::HTTP_BAD_REQUEST);
-        }
+        $dateReservation = new \DateTime(); 
 
         $dateHeureDepart = $this->parseDateTime($data['date_heure_depart'] ?? null, $error);
         if ($dateHeureDepart === null) {
@@ -116,6 +114,25 @@ class ReservationController extends AbstractController
             return $this->errorResponse($error ?? 'Invalid statut_reservation.', Response::HTTP_BAD_REQUEST);
         }
 
+        if (!isset($data['user_id'])) {
+            return $this->errorResponse('User ID is required.', Response::HTTP_BAD_REQUEST);
+        }
+
+        $user = $entityManager->getRepository(\App\Entity\User::class)->find($data['user_id']);
+        if (!$user) {
+            return $this->errorResponse('User not found.', Response::HTTP_BAD_REQUEST);
+        }
+
+        // Validation du trajet_id
+        if (!isset($data['trajet_id'])) {
+            return $this->errorResponse('Trajet ID is required.', Response::HTTP_BAD_REQUEST);
+        }
+
+        $trajet = $entityManager->getRepository(\App\Entity\Trajet::class)->find($data['trajet_id']);
+        if (!$trajet) {
+            return $this->errorResponse('Trajet not found.', Response::HTTP_BAD_REQUEST);
+        }
+
         // Création de la réservation
         $reservation = (new Reservation())
             ->setNumeroReservation($numeroReservation)
@@ -130,10 +147,9 @@ class ReservationController extends AbstractController
             ->setDateHeureArrive($dateHeureArrive)
             ->setNombreDePassager($nombrePassager)
             ->setMontantTotalReservation($montantTotal)
-            ->setStatutReservation($statutReservation);
-
-        // Note: Les relations Trajet et User doivent être gérées séparément
-        // si vous passez leurs IDs dans le JSON
+            ->setStatutReservation($statutReservation)
+            ->setTrajet($trajet)
+            ->setUser($user);
 
         $entityManager->persist($reservation);
         $entityManager->flush();
@@ -162,7 +178,7 @@ class ReservationController extends AbstractController
         $isPut = $request->getMethod() === 'PUT';
 
         if (array_key_exists('numero_reservation', $data) || $isPut) {
-            $numeroReservation = trim((string)($data['numero_reservation'] ?? ''));
+            $numeroReservation = trim((string) ($data['numero_reservation'] ?? ''));
             if ($numeroReservation === '') {
                 return $this->errorResponse('Numero de reservation is required.', Response::HTTP_BAD_REQUEST);
             }
@@ -170,10 +186,7 @@ class ReservationController extends AbstractController
         }
 
         if (array_key_exists('date_reservation', $data) || $isPut) {
-            $dateReservation = $this->parseDateTime($data['date_reservation'] ?? null, $error);
-            if ($dateReservation === null) {
-                return $this->errorResponse($error ?? 'Invalid date_reservation.', Response::HTTP_BAD_REQUEST);
-            }
+            $dateReservation = new \DateTime();
             $reservation->setDateReservation($dateReservation);
         }
 
@@ -310,7 +323,7 @@ class ReservationController extends AbstractController
             return null;
         }
 
-        $price = (float)$value;
+        $price = (float) $value;
         if ($price < 0) {
             $error = 'Price must be positive.';
             return null;
@@ -346,7 +359,7 @@ class ReservationController extends AbstractController
             return null;
         }
 
-        return (float)$value;
+        return (float) $value;
     }
 
     private function parseInt(mixed $value, ?string &$error): ?int
@@ -361,7 +374,7 @@ class ReservationController extends AbstractController
             return null;
         }
 
-        return (int)$value;
+        return (int) $value;
     }
 
     private function parseStatut(mixed $value, ?string &$error): ?StatutReservation
