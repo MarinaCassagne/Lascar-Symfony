@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Controller;
+// c'était App\Controller\Api donc ça marchait pas :(
 
 use App\Entity\EtapeTrajet;
 use App\Form\EtapeTrajetType;
