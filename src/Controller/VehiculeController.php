@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Vehicule;
+use App\Entity\User;
 use App\Repository\VehiculeRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -36,7 +37,7 @@ class VehiculeController extends AbstractController
         return $this->json($this->serializeVehicule($vehicule));
     }
 
-    #[Route('/api/vehicules', name: 'api_vehicules_create', methods: ['POST'])]
+    #[Route('/api/vehicules/register', name: 'api_vehicules_create', methods: ['POST'])]
     public function create(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $data = $this->decodeJson($request);
@@ -59,10 +60,17 @@ class VehiculeController extends AbstractController
             return $this->errorResponse('Couleur is required.', Response::HTTP_BAD_REQUEST);
         }
 
+        $user = $entityManager->find(User::class, $data['id']);
+        if ($user === '') {
+            return $this->errorResponse('User ID is required', Response::HTTP_BAD_REQUEST);
+        }
+
+
         $vehicule = (new Vehicule())
             ->setMarque($marque)
             ->setModele($modele)
-            ->setCouleur($couleur);
+            ->setCouleur($couleur)
+            ->setUser($user);
 
         $entityManager->persist($vehicule);
         $entityManager->flush();
@@ -110,6 +118,14 @@ class VehiculeController extends AbstractController
             $vehicule->setCouleur($couleur);
         }
 
+                if (array_key_exists('user_id', $data) || $isPut) {
+            $user_id = trim((string) ($data['user_id'] ?? ''));
+            if ($user_id === '') {
+                return $this->errorResponse('User ID is required.', Response::HTTP_BAD_REQUEST);
+            }
+            $vehicule->setUserId($user_id);
+        }
+
         $entityManager->flush();
 
         return $this->json($this->serializeVehicule($vehicule));
@@ -150,7 +166,7 @@ class VehiculeController extends AbstractController
             'marque' => $vehicule->getMarque(),
             'modele' => $vehicule->getModele(),
             'couleur' => $vehicule->getCouleur(),
-            'createdAt' => $vehicule->getCreatedAt()->format(\DateTimeInterface::ATOM),
+            'user_id'=> $vehicule->getUser(),
         ];
     }
 
