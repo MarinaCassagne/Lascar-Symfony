@@ -119,7 +119,7 @@ class ReservationController extends AbstractController
             return $this->errorResponse('User ID is required.', Response::HTTP_BAD_REQUEST);
         }
 
-        $user = $entityManager->getRepository(User::class)->find($data['user_id']);
+        $user = $entityManager->find(User::class,$data['user_id']);
         if (!$user) {
             return $this->errorResponse('User not found.', Response::HTTP_BAD_REQUEST);
         }
