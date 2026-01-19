@@ -55,7 +55,7 @@ class Reservation
     private ?StatutReservation $statut_reservation = null;
 
     #[ORM\ManyToOne(inversedBy: 'idReservation')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: true)]
     private ?Trajet $trajet = null;
 
     #[ORM\ManyToOne(inversedBy: 'idReservation')]
