@@ -118,7 +118,7 @@ class ReservationController extends AbstractController
             return $this->errorResponse('User ID is required.', Response::HTTP_BAD_REQUEST);
         }
 
-        $user = $entityManager->getRepository(\App\Entity\User::class)->find($data['user_id']);
+        $user = $entityManager->getRepository(User::class)->find($data['user_id']);
         if (!$user) {
             return $this->errorResponse('User not found.', Response::HTTP_BAD_REQUEST);
         }
@@ -128,7 +128,7 @@ class ReservationController extends AbstractController
             return $this->errorResponse('Trajet ID is required.', Response::HTTP_BAD_REQUEST);
         }
 
-        $trajet = $entityManager->getRepository(\App\Entity\Trajet::class)->find($data['trajet_id']);
+        $trajet = $entityManager->getRepository(Trajet::class)->find($data['trajet_id']);
         if (!$trajet) {
             return $this->errorResponse('Trajet not found.', Response::HTTP_BAD_REQUEST);
         }
