@@ -1,130 +1,100 @@
 <?php
 
-// Namespace du contrôleur (App\Controller)
-namespace App\Controller;
+namespace App\Controller\Api;
 
-// Import des classes utilisées
 use App\Entity\Moderation;
-use App\Form\ModerationType;
 use App\Repository\ModerationRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
-// Route principale du contrôleur : toutes les routes commencent par /moderation
-#[Route('/moderation')]
+#[Route('/api/moderations')]
 final class ModerationController extends AbstractController
 {
-    // Route pour afficher la liste des modérations
-    // URL : /moderation
-    // Nom : app_moderation_index
-    // Méthode HTTP : GET
-    #[Route(name: 'app_moderation_index', methods: ['GET'])]
-    public function index(ModerationRepository $moderationRepository): Response
+    #[Route('', name: 'api_moderation_index', methods: ['GET'])]
+    public function index(ModerationRepository $repo): JsonResponse
     {
-        // Rendu de la vue index.html.twig
-        // On envoie toutes les modérations récupérées depuis la base de données
-        return $this->render('moderation/index.html.twig', [
-            'moderations' => $moderationRepository->findAll(),
-        ]);
+        $moderations = $repo->findAll();
+
+        // Idéalement: Serializer / Groups. Ici: réponse simple "à la main".
+        $data = array_map(fn (Moderation $m) => $this->toArray($m), $moderations);
+
+        return $this->json($data, Response::HTTP_OK);
     }
 
-    // Route pour créer une nouvelle modération
-    // URL : /moderation/new
-    // Méthodes : GET (affichage du formulaire) et POST (envoi du formulaire)
-    #[Route('/new', name: 'app_moderation_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    #[Route('', name: 'api_moderation_create', methods: ['POST'])]
+    public function create(Request $request, EntityManagerInterface $em): JsonResponse
     {
-        // Création d’un nouvel objet Moderation vide
+        $payload = json_decode($request->getContent(), true);
+
+        if (!is_array($payload)) {
+            return $this->json(['error' => 'Invalid JSON body'], Response::HTTP_BAD_REQUEST);
+        }
+
         $moderation = new Moderation();
 
-        // Création du formulaire basé sur ModerationType
-        $form = $this->createForm(ModerationType::class, $moderation);
+        // TODO: adapte selon TES champs (ex: status, reason, contentId, userId, etc.)
+        // Exemple :
+        // $moderation->setStatus($payload['status'] ?? null);
 
-        // Récupération des données envoyées par le formulaire
-        $form->handleRequest($request);
+        // Validation minimale
+        // if (null === $moderation->getStatus()) {
+        //     return $this->json(['error' => 'status is required'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        // }
 
-        // Vérifie si le formulaire est soumis ET valide
-        if ($form->isSubmitted() && $form->isValid()) {
+        $em->persist($moderation);
+        $em->flush();
 
-            // Prépare l'entité à être enregistrée en base de données
-            $entityManager->persist($moderation);
-
-            // Exécute réellement l'enregistrement
-            $entityManager->flush();
-
-            // Redirection vers la liste des modérations
-            return $this->redirectToRoute('app_moderation_index', [], Response::HTTP_SEE_OTHER);
-        }
-
-        // Affiche le formulaire si non soumis ou invalide
-        return $this->render('moderation/new.html.twig', [
-            'moderation' => $moderation,
-            'form' => $form,
-        ]);
+        return $this->json($this->toArray($moderation), Response::HTTP_CREATED);
     }
 
-    // Route pour afficher une modération spécifique
-    // URL : /moderation/{id}
-    // Méthode : GET
-    #[Route('/{id}', name: 'app_moderation_show', methods: ['GET'])]
-    public function show(Moderation $moderation): Response
+    #[Route('/{id}', name: 'api_moderation_show', methods: ['GET'])]
+    public function show(Moderation $moderation): JsonResponse
     {
-        // Symfony récupère automatiquement la modération grâce à l'id
-        return $this->render('moderation/show.html.twig', [
-            'moderation' => $moderation,
-        ]);
+        return $this->json($this->toArray($moderation), Response::HTTP_OK);
     }
 
-    // Route pour modifier une modération existante
-    // URL : /moderation/{id}/edit
-    // Méthodes : GET et POST
-    #[Route('/{id}/edit', name: 'app_moderation_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Moderation $moderation, EntityManagerInterface $entityManager): Response
+    #[Route('/{id}', name: 'api_moderation_update', methods: ['PUT', 'PATCH'])]
+    public function update(Request $request, Moderation $moderation, EntityManagerInterface $em): JsonResponse
     {
-        // Création du formulaire avec les données existantes
-        $form = $this->createForm(ModerationType::class, $moderation);
+        $payload = json_decode($request->getContent(), true);
 
-        // Récupération des données envoyées
-        $form->handleRequest($request);
-
-        // Si le formulaire est valide
-        if ($form->isSubmitted() && $form->isValid()) {
-
-            // Pas besoin de persist() car l'entité existe déjà
-            $entityManager->flush();
-
-            // Redirection vers la liste
-            return $this->redirectToRoute('app_moderation_index', [], Response::HTTP_SEE_OTHER);
+        if (!is_array($payload)) {
+            return $this->json(['error' => 'Invalid JSON body'], Response::HTTP_BAD_REQUEST);
         }
 
-        // Affiche le formulaire de modification
-        return $this->render('moderation/edit.html.twig', [
-            'moderation' => $moderation,
-            'form' => $form,
-        ]);
+        // PUT/PATCH : tu mets à jour uniquement les champs présents
+        // TODO: adapte selon TES champs
+        // if (array_key_exists('status', $payload)) {
+        //     $moderation->setStatus($payload['status']);
+        // }
+
+        $em->flush();
+
+        return $this->json($this->toArray($moderation), Response::HTTP_OK);
     }
 
-    // Route pour supprimer une modération
-    // URL : /moderation/{id}
-    // Méthode : POST (sécurité)
-    #[Route('/{id}', name: 'app_moderation_delete', methods: ['POST'])]
-    public function delete(Request $request, Moderation $moderation, EntityManagerInterface $entityManager): Response
+    #[Route('/{id}', name: 'api_moderation_delete', methods: ['DELETE'])]
+    public function delete(Moderation $moderation, EntityManagerInterface $em): JsonResponse
     {
-        // Vérification du token CSRF pour éviter les attaques
-        if ($this->isCsrfTokenValid(
-            'delete' . $moderation->getId(),
-            $request->getPayload()->getString('_token')
-        )) {
+        $em->remove($moderation);
+        $em->flush();
 
-            // Suppression de l'entité
-            $entityManager->remove($moderation);
-            $entityManager->flush();
-        }
+        // 204: no content (classique REST)
+        return $this->json(null, Response::HTTP_NO_CONTENT);
+    }
 
-        // Redirection vers la liste après suppression
-        return $this->redirectToRoute('app_moderation_index', [], Response::HTTP_SEE_OTHER);
+    private function toArray(Moderation $m): array
+    {
+        // TODO: adapte selon tes getters réels
+        return [
+            'id' => $m->getId(),
+            // 'status' => $m->getStatus(),
+            // 'reason' => $m->getReason(),
+            // 'createdAt' => $m->getCreatedAt()?->format(DATE_ATOM),
+        ];
     }
 }
