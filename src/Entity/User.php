@@ -6,9 +6,12 @@ use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
+
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-class User
+class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -27,7 +30,7 @@ class User
     #[ORM\Column(length: 255)]
     private ?string $telephone = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 180, unique: true)]
     private ?string $email = null;
 
     #[ORM\Column(length: 255)]
@@ -137,7 +140,7 @@ class User
         return $this;
     }
 
-    public function getEmail(): ?string
+    public function getUserIdentifier(): string
     {
         return $this->email;
     }
@@ -149,7 +152,7 @@ class User
         return $this;
     }
 
-    public function getMotDePasse(): ?string
+    public function getPassword(): ?string
     {
         return $this->mot_de_passe;
     }
@@ -168,7 +171,7 @@ class User
     }
 
 
-        public function getPermisDeConduire(): ?bool
+    public function getPermisDeConduire(): ?bool
     {
         return $this->permis_de_conduire;
     }
@@ -186,7 +189,7 @@ class User
         return $this->compteValide;
     }
 
-            public function getCompteValide(): ?bool
+    public function getCompteValide(): ?bool
     {
         return $this->compteValide;
     }
@@ -382,4 +385,11 @@ class User
 
         return $this;
     }
+
+    // FONCTION QUI NE NOUS SERT A RIEN POUR LE MOMENT ET QU'ON UTILISERA SUREMENT PAS 
+    // MAIS SINON LES INTERFACES POSENT DES SOUCIS
+        public function getRoles(): array
+        {
+            return [];
+        }
 }

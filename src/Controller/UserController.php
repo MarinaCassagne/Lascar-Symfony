@@ -71,6 +71,7 @@ class UserController extends AbstractController
             return $this->errorResponse('Email is required.', Response::HTTP_BAD_REQUEST);
         }
 
+
         $permis_de_conduire = trim((bool) ($data['permis_de_conduire'] ?? ''));
         
 
@@ -92,8 +93,10 @@ class UserController extends AbstractController
             ->setTelephone($telephone)
             ->setEmail($email)
             ->setPermisDeConduire($permis_de_conduire)
-            ->setCompteValide($compte_valide)
-            ->setMotDePasse($mot_de_passe);
+            ->setCompteValide($compte_valide);
+
+        $hashedPassword = $passwordHasher->hashPassword($user, $mot_de_passe);
+        $user->setMotDePasse($hashedPassword);
 
 
         $entityManager->persist($user);
@@ -223,7 +226,7 @@ class UserController extends AbstractController
             'prenom' => $user->getPrenom(),
             'age' => $user->getAge(),
             'telephone' => $user->getTelephone(),
-            'email' => $user->getEmail(),
+            'email' => $user->getUserIdentifier(),
             'permis_de_conduire' => $user->getPermisDeConduire(),
             'compte_valide' => $user->getCompteValide(),
             'solde' => $user->getSolde(),
