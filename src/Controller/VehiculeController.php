@@ -25,7 +25,7 @@ class VehiculeController extends AbstractController
         return $this->json($vehicules);
     }
 
-    #[Route('/api/vehicules/{id}', name: 'api_vehicules_show', methods: ['GET'])]
+    #[Route('/api/vehicules/show', name: 'api_vehicules_show', methods: ['GET'])]
     public function show(int $id, VehiculeRepository $repository): JsonResponse
     {
         $vehicule = $repository->find($id);
@@ -60,7 +60,7 @@ class VehiculeController extends AbstractController
             return $this->errorResponse('Couleur is required.', Response::HTTP_BAD_REQUEST);
         }
 
-        $user = $entityManager->find(User::class, $data['id']);
+        $user = $entityManager->find(User::class, $data['user_id']);
         if ($user === '') {
             return $this->errorResponse('User ID is required', Response::HTTP_BAD_REQUEST);
         }
