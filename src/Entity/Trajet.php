@@ -136,7 +136,7 @@ class Trajet
         return $this->adresse_Arrivee;
     }
 
-    public function setLieuArriveeConducteur(string $adresse_Arrivee): static
+    public function setAdresseArriveeConducteur(string $adresse_Arrivee): static
     {
         $this->adresse_Arrivee = $adresse_Arrivee;
 

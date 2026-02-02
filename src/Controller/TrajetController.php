@@ -16,6 +16,7 @@ use Symfony\Component\HttpFoundation\Request; // pour utiliser les methodes HTTP
 use Symfony\Component\HttpFoundation\Response; // pour renvoyer les codes HTTP (202, 404, ...)
 use Symfony\Component\Routing\Attribute\Route; // pour définir des URLs
 use Symfony\Component\Validator\Validator\ValidatorInterface; //
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 final class TrajetController extends AbstractController
 {   
@@ -288,6 +289,8 @@ final class TrajetController extends AbstractController
         // Instancier l'objet trajet
         $trajet = (new Trajet())
             ->setDateDeDepart($date_de_depart)
+            ->setAdresseDepartConducteur()
+            ->setAdresseArriveeConducteur()
             ->setLongitudeLieuDepartConducteur($longitude_lieu_depart_conducteur)
             ->setLatitudeLieuDepartConducteur($latitude_lieu_depart_conducteur)
             ->setLongitudeLieuArriveConducteur($longitude_lieu_arrive_conducteur)
