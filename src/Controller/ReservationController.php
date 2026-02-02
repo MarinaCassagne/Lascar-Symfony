@@ -17,7 +17,7 @@ use Symfony\Component\Routing\Attribute\Route;
 class ReservationController extends AbstractController
 {
     #[Route('/api/reservations', name: 'api_reservations_list', methods: ['GET'])]
-    public function list(ReservationRepository $repository): JsonResponse
+    public function reservations(ReservationRepository $repository): JsonResponse
     {
         $reservations = array_map(
             fn(Reservation $reservation) => $this->serializeReservation($reservation),
@@ -28,7 +28,7 @@ class ReservationController extends AbstractController
     }
 
     #[Route('/api/reservations/{id}', name: 'api_reservations_show', methods: ['GET'])]
-    public function show(int $id, ReservationRepository $repository): JsonResponse
+    public function reservationById(int $id, ReservationRepository $repository): JsonResponse
     {
         $reservation = $repository->find($id);
 
@@ -40,7 +40,7 @@ class ReservationController extends AbstractController
     }
 
     #[Route('/api/reserver', name: 'api_reservations_create', methods: ['POST'])]
-    public function create(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function reserver(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $data = $this->decodeJson($request);
         if ($data === null) {
@@ -134,14 +134,14 @@ class ReservationController extends AbstractController
         }
 
         // Validation du trajet_id
-        // if (!isset($data['trajet_id'])) {
-        //     return $this->errorResponse('Trajet ID is required.', Response::HTTP_BAD_REQUEST);
-        // }
+        if (!isset($data['trajet_id'])) {
+            return $this->errorResponse('Trajet ID is required.', Response::HTTP_BAD_REQUEST);
+        }
 
-        // $trajet = $entityManager->getRepository(Trajet::class)->find($data['trajet_id']);
-        // if (!$trajet) {
-        //     return $this->errorResponse('Trajet not found.', Response::HTTP_BAD_REQUEST);
-        // }
+        $trajet = $entityManager->getRepository(Trajet::class)->find($data['trajet_id']);
+        if (!$trajet) {
+            return $this->errorResponse('Trajet not found.', Response::HTTP_BAD_REQUEST);
+        }
 
         // Création de la réservation
         $reservation = (new Reservation())
@@ -158,7 +158,7 @@ class ReservationController extends AbstractController
             ->setNombreDePassager($nombrePassager)
             ->setMontantTotalReservation($montantTotal)
             ->setStatutReservation($statutReservation)
-            // ->setTrajet($trajet)
+            ->setTrajet($trajet)
             ->setUser($user);
 
         $entityManager->persist($reservation);
@@ -168,7 +168,7 @@ class ReservationController extends AbstractController
     }
 
     #[Route('/api/reservations/{id}', name: 'api_reservations_update', methods: ['PUT', 'PATCH'])]
-    public function update(
+    public function updateReservation(
         int $id,
         Request $request,
         ReservationRepository $repository,
@@ -281,10 +281,7 @@ class ReservationController extends AbstractController
         }
 
         if (array_key_exists('statut_reservation', $data) || $isPut) {
-            $statutReservation = $this->parseStatut($data['statut_reservation'] ?? null, $error);
-            if ($statutReservation === null) {
-                return $this->errorResponse($error ?? 'Invalid statut_reservation.', Response::HTTP_BAD_REQUEST);
-            }
+            $statutReservation = StatutReservation::from($data['statut_reservation']);
             $reservation->setStatutReservation($statutReservation);
         }
 
@@ -294,7 +291,7 @@ class ReservationController extends AbstractController
     }
 
     #[Route('/api/reservations/{id}', name: 'api_reservations_delete', methods: ['DELETE'])]
-    public function delete(int $id, ReservationRepository $repository, EntityManagerInterface $entityManager): JsonResponse
+    public function deleteReservation(int $id, ReservationRepository $repository, EntityManagerInterface $entityManager): JsonResponse
     {
         $reservation = $repository->find($id);
 
@@ -387,6 +384,7 @@ class ReservationController extends AbstractController
         return (int) $value;
     }
 
+    // Fonction permettant de transformer un objet PHP en Structure que JSON peut comprendre (ici un tableau)
     private function serializeReservation(Reservation $reservation): array
     {
         return [
@@ -409,6 +407,7 @@ class ReservationController extends AbstractController
         ];
     }
 
+    // Fonction pour gérer les erreur + status du serveur.
     private function errorResponse(string $message, int $status): JsonResponse
     {
         return $this->json(['error' => $message], $status);
