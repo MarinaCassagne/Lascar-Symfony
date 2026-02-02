@@ -25,7 +25,10 @@ class Trajet
     private ?\DateTime $date_de_depart = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $lieu_depart_conducteur = null;
+    private ?string $adresse_Depart = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $adresse_Arrivee = null;
 
     #[ORM\Column]
     private ?float $longitude_lieu_depart_conducteur = null;
@@ -116,14 +119,26 @@ class Trajet
         return $this;
     }
 
-    public function getLieuDepartConducteur(): ?string
+    public function getAdresseDepartConducteur(): ?string
     {
-        return $this->lieu_depart_conducteur;
+        return $this->adresse_Depart;
     }
 
-    public function setLieuDepartConducteur(string $lieu_depart_conducteur): static
+    public function setAdresseDepartConducteur(string $adresse_Depart): static
     {
-        $this->lieu_depart_conducteur = $lieu_depart_conducteur;
+        $this->adresse_Depart = $adresse_Depart;
+
+        return $this;
+    }
+
+    public function getAdresseArriveeConducteur(): ?string
+    {
+        return $this->adresse_Arrivee;
+    }
+
+    public function setLieuArriveeConducteur(string $adresse_Arrivee): static
+    {
+        $this->adresse_Arrivee = $adresse_Arrivee;
 
         return $this;
     }
