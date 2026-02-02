@@ -15,7 +15,7 @@ class Solde
     private ?int $id = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 5, scale: 2)]
-    private ?string $montant_solde = null;
+    private ?string $montant_solde = "0";
 
     #[ORM\ManyToOne(inversedBy: 'idUser')]
     private ?User $User = null;

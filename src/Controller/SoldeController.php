@@ -15,10 +15,13 @@ use Symfony\Component\Routing\Attribute\Route;
 final class SoldeController extends AbstractController
 {
     #[Route('/new', name: 'app_solde_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    public function newSolde(Request $request, EntityManagerInterface $entityManager): Response
     {
         $solde = new Solde();
-        
+        $entityManager->persist($solde);
+        $entityManager->flush();
+
+        return $this->json($this->serializeSolde($solde), Response::HTTP_CREATED);
     }
 
     #[Route('/{id}', name: 'app_solde_show', methods: ['GET'])]
@@ -57,4 +60,14 @@ final class SoldeController extends AbstractController
 
         return $this->redirectToRoute('app_solde_index', [], Response::HTTP_SEE_OTHER);
     }
+
+    private function serializeSolde(Solde $solde): array
+    {
+        return [
+            'id' => $solde->getId(),
+            'montant' => $solde->getMontantSolde(),
+            'user_id' => $solde->getUser()?->getId(),
+        ];
+    }
+
 }
