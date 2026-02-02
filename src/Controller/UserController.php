@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Entity\Solde;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -73,7 +74,7 @@ class UserController extends AbstractController
 
 
         $permis_de_conduire = trim((bool) ($data['permis_de_conduire'] ?? ''));
-        
+
 
         $mot_de_passe = trim((string) ($data['mot_de_passe'] ?? ''));
         if ($mot_de_passe === '') {
@@ -101,6 +102,14 @@ class UserController extends AbstractController
 
         $entityManager->persist($user);
         $entityManager->flush();
+
+        $solde = new Solde();
+        $solde->setUser($user);
+        $solde->setMontantSolde(0.0);
+
+        $entityManager->persist($solde);
+        $entityManager->flush();
+
 
         return $this->json($this->serializeUser($user), Response::HTTP_CREATED);
     }
