@@ -17,6 +17,9 @@ class Solde
     #[ORM\Column(type: Types::DECIMAL, precision: 5, scale: 2)]
     private ?string $montant_solde = null;
 
+    #[ORM\ManyToOne(inversedBy: 'idUser')]
+    private ?User $User = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -30,6 +33,18 @@ class Solde
     public function setMontantSolde(string $montant_solde): static
     {
         $this->montant_solde = $montant_solde;
+
+        return $this;
+    }
+
+    public function getUser(): ?User
+    {
+        return $this->User;
+    }
+
+    public function setUser(?User $User): static
+    {
+        $this->User = $User;
 
         return $this;
     }
