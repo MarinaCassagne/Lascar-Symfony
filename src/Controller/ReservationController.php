@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+// use App\Controller\Trajet;
 
 class ReservationController extends AbstractController
 {
@@ -134,14 +135,14 @@ class ReservationController extends AbstractController
         }
 
         // Validation du trajet_id
-        if (!isset($data['trajet_id'])) {
-            return $this->errorResponse('Trajet ID is required.', Response::HTTP_BAD_REQUEST);
-        }
+        // if (!isset($data['trajet_id'])) {
+        //     return $this->errorResponse('Trajet ID is required.', Response::HTTP_BAD_REQUEST);
+        // }
 
-        $trajet = $entityManager->getRepository(Trajet::class)->find($data['trajet_id']);
-        if (!$trajet) {
-            return $this->errorResponse('Trajet not found.', Response::HTTP_BAD_REQUEST);
-        }
+        // $trajet = $entityManager->getRepository(Trajet::class)->find($data['trajet_id']);
+        // if (!$trajet) {
+        //     return $this->errorResponse('Trajet not found.', Response::HTTP_BAD_REQUEST);
+        // }
 
         // Création de la réservation
         $reservation = (new Reservation())
@@ -158,7 +159,7 @@ class ReservationController extends AbstractController
             ->setNombreDePassager($nombrePassager)
             ->setMontantTotalReservation($montantTotal)
             ->setStatutReservation($statutReservation)
-            ->setTrajet($trajet)
+            // ->setTrajet($trajet)
             ->setUser($user);
 
         $entityManager->persist($reservation);
