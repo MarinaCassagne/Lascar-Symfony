@@ -27,7 +27,7 @@ final class TrajetController extends AbstractController
     // ========================================================================
     
     // Lister les trajets sous format JSON
-    public function list(TrajetRepository $trajetRepository): JsonResponse
+    public function listTrajets(TrajetRepository $trajetRepository): JsonResponse
     {
         // Permet de mettre dans un tableau le résulat de la fonction 
         $trajets = array_map(
@@ -46,10 +46,10 @@ final class TrajetController extends AbstractController
     //                        ✨CRÉER UN TRAJET
     // ========================================================================
 
-    #[Route('/api/trajets', name: 'app_trajet_create', methods: ['POST'])]
+    #[Route('/api/publier_trajet', name: 'app_trajet_create', methods: ['POST'])]
 
     // Créer un nouveau trajet et le sauvegarder en base de données
-    public function create(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function publierTrajet(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         // Décode le JSON envoyé dans le corps de la requête
         // Transforme {"date_de_depart":2026-09-23 08:25:34,"prix":3,40} en tableau associatif PHP ['date_de_depart'=>'2026-09-23 08:25:34','prix'=>3,40]
@@ -320,7 +320,7 @@ final class TrajetController extends AbstractController
     // ========================================================================
 
     #[Route('api/trajets/{id}', name: 'app_trajet_show', methods: ['GET'])]
-    public function show(int $id,TrajetRepository $repository): JsonResponse
+    public function showTrajetById(int $id,TrajetRepository $repository): JsonResponse
     {
         // Chercher dans la base de donnée un trajet via son id
         $trajet = $repository->find($id);
@@ -338,8 +338,8 @@ final class TrajetController extends AbstractController
     //                        ✨MODIFIER UN TRAJET
     // ========================================================================
 
-    #[Route('api/trajets/{id}/edit', name: 'app_trajet_edit', methods: ['PUT', 'PATCH'])]// PUT: Mettre à jour ou remplacer une ressource | PATCH : Modifier partiellement une ressource
-    public function edit(
+    #[Route('api/trajets/{id}/update', name: 'app_trajet_edit', methods: ['PUT', 'PATCH'])]// PUT: Mettre à jour ou remplacer une ressource | PATCH : Modifier partiellement une ressource
+    public function updateTrajet(
         int $id, 
         Request $request, 
         TrajetRepository $repository, 
