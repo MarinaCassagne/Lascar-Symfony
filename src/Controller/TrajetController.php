@@ -65,6 +65,26 @@ final class TrajetController extends AbstractController
         //         VÉRIFICATION / VALIDATION 
         // ==============================================
 
+        $lieu_depart = $data['lieu_de_depart'];
+
+        if ($lieu_depart === '' || $lieu_depart === null) {
+            return $this->errorResponse('Departure place is required.', Response::HTTP_BAD_REQUEST);
+        }
+
+        // Je récupère les coordonnées du lieu de départ
+        $coordDepart = $osm->geocode($lieu_depart);
+
+
+
+        $lieu_arrivee = $data['lieu_arrivee'];
+
+        if ($lieu_arrivee === '' || $lieu_arrivee === null) {
+            return $this->errorResponse('Arrival place is required.', Response::HTTP_BAD_REQUEST);
+        }
+
+        // Je récupère les coordonnées du lieu de départ
+        $coordArrivee = $osm->geocode($lieu_arrivee);
+
         //============= DATE DE DÉPART ==================
 
         // Récupérer la donnée date de départ dans la requête qui sera au format string après decodeJson
@@ -98,10 +118,10 @@ final class TrajetController extends AbstractController
         //=== ADRESSE LIEU DE D'ARRIVÉE ============
 
         // Récupérer la donnée longitude_lieu_arrive_conducteur dans la requête
-        $longitude_lieu_arrive_conducteur = $data['longitude_lieu_arrive_conducteur'] ?? '';
+        $longitude_lieu_arrive_conducteur = $coordArrivee['lon'];
 
         // Récupérer la donnée latitude_lieu_arrive_conducteur dans la requête
-        $latitude_lieu_arrive_conducteur = $data['latitude_lieu_arrive_conducteur'] ?? '';
+        $latitude_lieu_arrive_conducteur = $coordArrivee['lat'];
 
 
         //============= DURÉE EN MINUTES =========================
@@ -265,6 +285,8 @@ final class TrajetController extends AbstractController
         // Instancier l'objet trajet
         $trajet = (new Trajet())
             ->setDateDeDepart($date_de_depart)
+            ->setLieuDepartConducteur($lieu_depart)
+            ->setLieuArriveeConducteur($lieu_arrivee)
             ->setLongitudeLieuDepartConducteur($longitude_lieu_depart_conducteur)
             ->setLatitudeLieuDepartConducteur($latitude_lieu_depart_conducteur)
             ->setLongitudeLieuArriveConducteur($longitude_lieu_arrive_conducteur)

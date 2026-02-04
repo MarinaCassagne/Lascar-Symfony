@@ -27,6 +27,9 @@ class Trajet
     #[ORM\Column(length: 255)]
     private ?string $lieu_depart_conducteur = null;
 
+    #[ORM\Column(length: 255)]
+    private ?string $lieu_arrivee_conducteur = null;
+
     #[ORM\Column]
     private ?float $longitude_lieu_depart_conducteur = null;
 
@@ -124,6 +127,18 @@ class Trajet
     public function setLieuDepartConducteur(string $lieu_depart_conducteur): static
     {
         $this->lieu_depart_conducteur = $lieu_depart_conducteur;
+
+        return $this;
+    }
+
+    public function getLieuArriveeConducteur(): ?string
+    {
+        return $this->lieu_arrivee_conducteur;
+    }
+
+    public function setLieuArriveeConducteur(string $lieu_arrivee_conducteur): static
+    {
+        $this->lieu_arrivee_conducteur = $lieu_arrivee_conducteur;
 
         return $this;
     }
