@@ -238,45 +238,50 @@ final class TrajetController extends AbstractController
             return $this->errorResponse('Publication date is required.', Response::HTTP_BAD_REQUEST);
         }
 
-        //======== ID MODÉRATION ========
+        // //======== ID MODÉRATION ========
 
-        // Récupérer l'id Modération si il en existe une pour ce trajet
-        $idModeration = $entityManager->getRepository(Moderation::class)->find($data['idModeration']);
+        // // Récupérer l'id Modération si il en existe une pour ce trajet
+        // $idModeration = $entityManager->getRepository(Moderation::class)->find($data['idModeration']);
 
-        // Renvoyer une message si idModeration avec le code HTTP (HperTexte Transfer Protocol) 400. 
-        if (!$idModeration) {
-            return $this->errorResponse('Moderation id : {idModeration} not found.', Response::HTTP_BAD_REQUEST);
-        }
+        // // Renvoyer une message si idModeration avec le code HTTP (HperTexte Transfer Protocol) 400. 
+        // if (!$idModeration) {
+        //     return $this->errorResponse('Moderation id : {idModeration} not found.', Response::HTTP_BAD_REQUEST);
+        // }
 
         //======== ID USER ========
 
+        if (!isset($data['user_id'])) {
+            return $this->errorResponse('User ID is required.', Response::HTTP_BAD_REQUEST);
+        }
+
+
         // Récupérer l'idUser dans la requête de la personne ayant proposer le trajet
-        $User = $entityManager->getRepository(User::class)->find($data['User']);
+        $User = $entityManager->getRepository(User::class)->find($data['user_id']);
 
         // Renvoyer une message si idUser non trouvé avec le code HTTP (HperTexte Transfer Protocol) 400.
         if (!$User) {
             return $this->errorResponse('User id : {User} not found.', Response::HTTP_BAD_REQUEST);
         }
 
-        //======== ID ÉTAPE TRAJET ========
+        // //======== ID ÉTAPE TRAJET ========
 
-        // Récupérer l'idEtapeTrajet dans la requête associé à l'i
-        $idEtapeTrajet = $entityManager->getRepository(EtapeTrajet::class)->find($data['idEtateTrajet']);
+        // // Récupérer l'idEtapeTrajet dans la requête associé à l'i
+        // $idEtapeTrajet = $entityManager->getRepository(EtapeTrajet::class)->find($data['idEtateTrajet']);
 
-        // Renvoyer une message si idEtapeTrajet non trouvé avec le code HTTP (HperTexte Transfer Protocol) 400.
-        if (!$idEtapeTrajet) {
-            return $this->errorResponse('Journey stage id : {idEtapeTrajet} not found.', Response::HTTP_BAD_REQUEST);
-        }
+        // // Renvoyer une message si idEtapeTrajet non trouvé avec le code HTTP (HperTexte Transfer Protocol) 400.
+        // if (!$idEtapeTrajet) {
+        //     return $this->errorResponse('Journey stage id : {idEtapeTrajet} not found.', Response::HTTP_BAD_REQUEST);
+        // }
 
-        //======== ID RÉSERVATION ========
+        // //======== ID RÉSERVATION ========
 
-        // Récupérer l'idReservation dans la requête associé à l'i
-        $idReservation = $entityManager->getRepository(Reservation::class)->find($data['idReservation']);
+        // // Récupérer l'idReservation dans la requête associé à l'i
+        // $idReservation = $entityManager->getRepository(Reservation::class)->find($data['idReservation']);
 
-        // Renvoyer une message si idEtapeTrajet non trouvé avec le code HTTP (HperTexte Transfer Protocol) 400.
-        if (!$idReservation) {
-            return $this->errorResponse('Reservation id : {idReservation} not found.', Response::HTTP_BAD_REQUEST);
-        }
+        // // Renvoyer une message si idEtapeTrajet non trouvé avec le code HTTP (HperTexte Transfer Protocol) 400.
+        // if (!$idReservation) {
+        //     return $this->errorResponse('Reservation id : {idReservation} not found.', Response::HTTP_BAD_REQUEST);
+        // }
 
         // ==============================================
         //         CRÉATION D'UN TRAJET 
@@ -299,10 +304,10 @@ final class TrajetController extends AbstractController
             ->setTypeTrajet($type_trajet)
             ->setStatutValide($statut_valide)
             ->setDateDePublication($date_de_publication)
-            ->setIdModeration($idModeration)
-            ->setUser($User)
-            ->addIdEtapeTrajet($idEtapeTrajet)
-            ->addIdReservation($idReservation);
+            // ->setIdModeration($idModeration)
+            ->setUser($User);
+        // ->addIdEtapeTrajet($idEtapeTrajet)
+        // ->addIdReservation($idReservation);
 
         // Sauvegarder le trajet dans la BDD
 
@@ -548,37 +553,28 @@ final class TrajetController extends AbstractController
      */
     private function parseFloat(array $data, mixed $value, bool $required, ?string &$error): ?string
     {
-        // Vérifie si la valeur est vide
         if ($value === null || $value === '') {
             if ($required) {
-                $error = key($data) . ' is required.';
+                $error = 'prix is required.';
             }
             return null;
         }
 
-        // Vérifie si c'est un nombre
         if (!is_numeric($value)) {
-            $error = key($data) . ' must be numeric.';
+            $error = 'prix must be numeric.';
             return null;
         }
 
-        // Si la donnée est un prix
-        if (key($data) === "prix") {
+        $prix = (float) $value;
 
-            // Convertit en float
-            $prix = (float) $value;
-
-            // Vérifie que c'est positif
-            if ($prix < 0) {
-                $error = key($data) . ' must be positive.';
-                return null;
-            }
-
-            // Formate le prix avec 2 décimales
-            return number_format($prix, 2, '.', '');
-
+        if ($prix < 0) {
+            $error = 'prix must be positive.';
+            return null;
         }
+
+        return number_format($prix, 2, '.', '');
     }
+
 
 
     /**

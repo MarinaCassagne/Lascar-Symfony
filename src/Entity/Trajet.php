@@ -52,7 +52,7 @@ class Trajet
     private ?int $nombre_de_place = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 5, scale: 2)]
-    private ?string $prix = null;
+    private ?float $prix = null;
 
     #[ORM\Column]
     private ?\DateTime $date_de_publication = null;
@@ -227,12 +227,12 @@ class Trajet
         return $this;
     }
 
-    public function getPrix(): ?string
+    public function getPrix(): ?float
     {
         return $this->prix;
     }
 
-    public function setPrix(string $prix): static
+    public function setPrix(float $prix): static
     {
         $this->prix = $prix;
 
