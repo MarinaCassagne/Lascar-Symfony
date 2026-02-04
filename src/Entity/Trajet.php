@@ -10,6 +10,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert; // permet de mettre des contraintes pour valider les données
 
 #[ORM\Entity(repositoryClass: TrajetRepository::class)]
 class Trajet
@@ -20,10 +21,14 @@ class Trajet
     private ?int $id = null;
 
     #[ORM\Column]
+    #[Assert\NotBlank]
     private ?\DateTime $date_de_depart = null;
 
     #[ORM\Column(length: 255)]
     private ?string $lieu_depart_conducteur = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $lieu_arrivee_conducteur = null;
 
     #[ORM\Column]
     private ?float $longitude_lieu_depart_conducteur = null;
@@ -47,15 +52,23 @@ class Trajet
     private ?int $nombre_de_place = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 5, scale: 2)]
-    private ?string $prix = null;
+    private ?float $prix = null;
 
     #[ORM\Column]
     private ?\DateTime $date_de_publication = null;
 
     #[ORM\Column(enumType: NatureTrajet::class)]
+    #[Assert\Choice(
+    callback: [NatureTrajet::class],
+    message: 'The nature of the path "{{ value }}" is not valid.'
+    )]
     private ?NatureTrajet $nature_trajet = null;
 
     #[ORM\Column(enumType: TypeTrajet::class)]
+    #[Assert\Choice(
+    callback: [TypeTrajet::class],
+    message: 'Le nature du trajet "{{ value }}" n\'est pas valide'
+    )]
     private ?TypeTrajet $type_trajet = null;
 
     #[ORM\Column(enumType: StatutValidTrajet::class)]
@@ -83,7 +96,11 @@ class Trajet
     {
         $this->idEtapeTrajet = new ArrayCollection();
         $this->idReservation = new ArrayCollection();
+       
     }
+
+
+    
 
     public function getId(): ?int
     {
@@ -110,6 +127,18 @@ class Trajet
     public function setLieuDepartConducteur(string $lieu_depart_conducteur): static
     {
         $this->lieu_depart_conducteur = $lieu_depart_conducteur;
+
+        return $this;
+    }
+
+    public function getLieuArriveeConducteur(): ?string
+    {
+        return $this->lieu_arrivee_conducteur;
+    }
+
+    public function setLieuArriveeConducteur(string $lieu_arrivee_conducteur): static
+    {
+        $this->lieu_arrivee_conducteur = $lieu_arrivee_conducteur;
 
         return $this;
     }
@@ -198,12 +227,12 @@ class Trajet
         return $this;
     }
 
-    public function getPrix(): ?string
+    public function getPrix(): ?float
     {
         return $this->prix;
     }
 
-    public function setPrix(string $prix): static
+    public function setPrix(float $prix): static
     {
         $this->prix = $prix;
 
