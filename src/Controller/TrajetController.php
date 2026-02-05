@@ -8,6 +8,9 @@ use App\Entity\User; // Entité User pour pouvoir instancier récupérer IdUser
 use App\Entity\Moderation; // Entité Moderation pour pouvoir instancier récupérer IdModeration
 use App\Entity\Reservation;
 use App\Form\TrajetType;
+use App\Enum\NatureTrajet;
+use App\Enum\TypeTrajet;
+use App\Enum\StatutValidTrajet;
 use App\Repository\TrajetRepository;
 use App\Service\OpenStreetMapService;
 use Doctrine\ORM\EntityManagerInterface; // pour sauvergarder ou supprimer dans la BDD
@@ -100,6 +103,9 @@ final class TrajetController extends AbstractController
             return $this->errorResponse('Departure date is required.', Response::HTTP_BAD_REQUEST);
         }
 
+        $date_depart = new \DateTime($date_de_depart);
+
+
         //============= "ADRESSES" =====================
 
         // TODO ⚠️ AJOUTER LA VÉRIFICATION : SI LES ADRESSES EXISTENT
@@ -185,6 +191,16 @@ final class TrajetController extends AbstractController
             return $this->errorResponse('Nature of the journey is required.', Response::HTTP_BAD_REQUEST);
         }
 
+
+        try {
+            $nature_trajet = NatureTrajet::from($nature_trajet);
+        } catch (\ValueError $e) {
+            return $this->errorResponse(
+                'Nature of the journey must be Offre or Demande.',
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
         //======== TYPE DE TRAJET ====================
 
         // Récupérer le type de trajet dans la requête (DOMICILE_TRAVAIL, EVENEMENT)
@@ -197,6 +213,15 @@ final class TrajetController extends AbstractController
         if ($type_trajet === '') {
             // Alors retourner une erreur avec le code HTTP (HperTexte Transfer Protocol) 400.
             return $this->errorResponse('Type of journey is invalid (DOMICILE_TRAVAIL, EVENEMENT).', Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $type_trajet = TypeTrajet::from($type_trajet);
+        } catch (\ValueError $e) {
+            return $this->errorResponse(
+                'Type of the journey must be "Domicile Travail" or "Évènement" .',
+                Response::HTTP_BAD_REQUEST
+            );
         }
 
         //======== STATUT VALIDE TRAJET =============
@@ -216,6 +241,16 @@ final class TrajetController extends AbstractController
             // Alors retourner une erreur avec le code HTTP (HperTexte Transfer Protocol) 400.
             return $this->errorResponse('Valid trip status is required.', Response::HTTP_BAD_REQUEST);
         }
+
+        try {
+            $statut_valide = StatutValidTrajet::from($statut_valide);
+        } catch (\ValueError $e) {
+            return $this->errorResponse(
+                'Statut of the journey must be "En attente", "Valide" , or "Refusé" .',
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
 
         //======== DATE DE PUBLICATION ================
 
@@ -237,6 +272,9 @@ final class TrajetController extends AbstractController
             // Alors retourner une erreur avec le code HTTP (HperTexte Transfer Protocol) 400.
             return $this->errorResponse('Publication date is required.', Response::HTTP_BAD_REQUEST);
         }
+
+        $date_publication = new \DateTime($date_de_publication);
+
 
         // //======== ID MODÉRATION ========
 
@@ -289,7 +327,7 @@ final class TrajetController extends AbstractController
 
         // Instancier l'objet trajet
         $trajet = (new Trajet())
-            ->setDateDeDepart($date_de_depart)
+            ->setDateDeDepart($date_depart)
             ->setLieuDepartConducteur($lieu_depart)
             ->setLieuArriveeConducteur($lieu_arrivee)
             ->setLongitudeLieuDepartConducteur($longitude_lieu_depart_conducteur)
@@ -303,7 +341,7 @@ final class TrajetController extends AbstractController
             ->setNatureTrajet($nature_trajet)
             ->setTypeTrajet($type_trajet)
             ->setStatutValide($statut_valide)
-            ->setDateDePublication($date_de_publication)
+            ->setDateDePublication($date_publication)
             // ->setIdModeration($idModeration)
             ->setUser($User);
         // ->addIdEtapeTrajet($idEtapeTrajet)
@@ -520,28 +558,32 @@ final class TrajetController extends AbstractController
      * @param Trajet $trajet: L'objet Trajet à convertir
      */
     private function serializeTrajet(Trajet $trajet): array
-    {
-        return [
-            'id' => $trajet->getId(),
-            'date_de_depart' => $trajet->getDateDeDepart(),
-            'longitude_lieu_depart_conducteur' => $trajet->getLongitudeLieuDepartConducteur(),
-            'latitude_lieu_depart_conducteur' => $trajet->getLatitudeLieuDepartConducteur(),
-            'longitude_lieu_arrive_conducteur' => $trajet->getLongitudeLieuArriveConducteur(),
-            'latitude_lieu_arrive_conducteur' => $trajet->getLatitudeLieuArriveConducteur(),
-            'duree' => $trajet->getDuree(),
-            'nombre_de_km' => $trajet->getNombreDeKm(),
-            'nombre_de_place' => $trajet->getNombreDePlace(),
-            'prix' => $trajet->getPrix(),
-            'date_de_publication' => $trajet->getDateDePublication()->format('Y-m-d H:i:s'),
-            'nature_trajet' => $trajet->getNatureTrajet(),
-            'type_trajet' => $trajet->getTypeTrajet(),
-            'statut_valide' => $trajet->getStatutValide(),
-            'idModeration' => $trajet->getIdModeration(),
-            'User' => $trajet->getUser(),
-            'idEtapeTrajet' => $trajet->getIdEtapeTrajet(),
-            'idReservation' => $trajet->getIdReservation()
-        ];
-    }
+{
+    return [
+        'id' => $trajet->getId(),
+        'date_de_depart' => $trajet->getDateDeDepart()->format('Y-m-d H:i:s'),
+        'lieu_depart' => $trajet->getLieuDepartConducteur(),
+        'latitude_lieu_depart_conducteur' => $trajet->getLatitudeLieuDepartConducteur(),
+        'longitude_lieu_depart_conducteur' => $trajet->getLongitudeLieuDepartConducteur(),
+        'lieu_arrivee' => $trajet->getLieuArriveeConducteur(),
+        'latitude_lieu_arrive_conducteur' => $trajet->getLatitudeLieuArriveConducteur(),
+        'longitude_lieu_arrive_conducteur' => $trajet->getLongitudeLieuArriveConducteur(),
+        'duree' => $trajet->getDuree(),
+        'nombre_de_km' => $trajet->getNombreDeKm(),
+        'nombre_de_place' => $trajet->getNombreDePlace(),
+        'prix' => $trajet->getPrix(),
+        'date_de_publication' => $trajet->getDateDePublication()->format('Y-m-d H:i:s'),
+        'nature_trajet' => $trajet->getNatureTrajet()->value,
+        'type_trajet' => $trajet->getTypeTrajet()->value,
+        'statut_valide' => $trajet->getStatutValide()->value,
+        'user' => [
+            'id' => $trajet->getUser()->getId(),
+            'nom' => $trajet->getUser()->getNom(),
+            'prenom' => $trajet->getUser()->getPrenom(),
+        ],
+    ];
+}
+
 
     /**
      * Valide et vérifie la donnée de type décimale (exemple : coordonnées GPS et prix)
