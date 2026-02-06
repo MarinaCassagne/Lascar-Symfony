@@ -66,7 +66,13 @@ final class TrajetController extends AbstractController
 
         // ==============================================
         //         VÉRIFICATION / VALIDATION 
-        // ==============================================
+        // ==============================================v
+
+        //============= "ADRESSES" =====================
+
+        // TODO ⚠️ AJOUTER LA VÉRIFICATION : SI LES ADRESSES EXISTENT
+
+        //=== ADRESSE LIEU DE DÉPART================
 
         $lieu_depart = $data['lieu_de_depart'];
 
@@ -78,7 +84,7 @@ final class TrajetController extends AbstractController
         $coordDepart = $osm->geocode($lieu_depart);
 
 
-
+        
         $lieu_arrivee = $data['lieu_arrivee'];
 
         if ($lieu_arrivee === '' || $lieu_arrivee === null) {
@@ -105,13 +111,8 @@ final class TrajetController extends AbstractController
 
         $date_depart = new \DateTime($date_de_depart);
 
+        // TODO faire vérif serveur pour les Coordonnées, et les données distance et durée
 
-        //============= "ADRESSES" =====================
-
-        // TODO ⚠️ AJOUTER LA VÉRIFICATION : SI LES ADRESSES EXISTENT
-        // TODO AJOUTER  les attributs $adresse_lieu_depart_conducteur et $adresse_lieu_arrive_conducteur
-
-        //=== ADRESSE LIEU DE DÉPART================
 
         // Récupérer la donnée longitude_lieu_depart_conducteur dans la requête
         $longitude_lieu_depart_conducteur = $coordDepart['lon'];
@@ -131,30 +132,22 @@ final class TrajetController extends AbstractController
 
 
         //============= DURÉE EN MINUTES =========================
+        $points = [
+            $coordDepart,
+            $coordArrivee
+        ];
 
-        // TODO UTILISER API POUR CALCULER LA DURÉE EN UTILISANT LES COORDONNÉES GPS DU LIEU DE DÉPART ET D'ARRIVÉE
-        //  Ressource :https://distancematrix.ai/fr/guides/easy-migrate
+        $route = $osm->donneesTrajet($points);
 
         // Récupérer la donnée durée dans la requête
-        $duree = $data['duree'] ?? '';
+        $duree = $route['durationMin'];
 
-        // Nettoyer et valider la data duree
-        if ($duree === '') {
-            // Si la duree est vide, retourner une erreur avec le code HTTP (HperTexte Transfer Protocol) 400.
-            return $this->errorResponse('Duration is required.', Response::HTTP_BAD_REQUEST);
-        }
 
         //============= NOMBRE DE KM ==================
-        // TODO UTILISER API POUR CALCULER LE NOMBRE DE KM EN UTILISANT LES COORDONNÉES GPS DU LIEU DE DÉPART ET D'ARRIVÉE
 
         // Récupérer la donnée nombre de km dans la requête
-        $nombre_de_km = $data['nombre_de_km'] ?? '';
+        $nombre_de_km = $route['distanceKm'];
 
-        // Nettoyer et valider la donnée nombre de km
-        if ($nombre_de_km === '') {
-            // Si le nombre de km est vide, retourner une erreur avec le code HTTP (HperTexte Transfer Protocol) 400.
-            return $this->errorResponse('Number of kilometers is required.', Response::HTTP_BAD_REQUEST);
-        }
 
         //============= NOMBRE DE PLACES ===============
 

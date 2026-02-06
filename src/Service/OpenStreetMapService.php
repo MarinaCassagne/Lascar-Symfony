@@ -27,6 +27,31 @@ class OpenStreetMapService
         ];
     }
 
+    public function donneesTrajet(array $points): array{
+
+        $coords = array_map(
+            fn ($p) => "{$p['lon']},{$p['lat']}",
+            $points
+        );
+
+        $url = 'https://router.project-osrm.org/route/v1/driving/'.implode(';', $coords);
+
+        $response = $this->client->request('GET', $url, [
+            'query'=>[
+                'overview' => 'false'
+            ]
+        ]);
+
+        $data = $response->toArray();
+
+        $route = $data['routes'][0];
+
+        return [
+            'distanceKm' => $route['distance'] / 1000,
+            'durationMin' => $route['duration']/ 60,
+        ];
+    }
+
 
 }
 
