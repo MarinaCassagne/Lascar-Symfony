@@ -91,7 +91,7 @@ final class TrajetController extends AbstractController
             return $this->errorResponse('Arrival place is required.', Response::HTTP_BAD_REQUEST);
         }
 
-        // Je récupère les coordonnées du lieu de départ
+        // Je récupère les coordonnées du lieu d'arrivé
         $coordArrivee = $osm->geocode($lieu_arrivee);
 
         //============= DATE DE DÉPART ==================
@@ -130,8 +130,7 @@ final class TrajetController extends AbstractController
         // Récupérer la donnée latitude_lieu_arrive_conducteur dans la requête
         $latitude_lieu_arrive_conducteur = $coordArrivee['lat'];
 
-
-        //============= DURÉE EN MINUTES =========================
+        // Tableau contenant mes différents points du trajets
         $points = [
             $coordDepart,
             $coordArrivee
@@ -142,8 +141,6 @@ final class TrajetController extends AbstractController
         // Récupérer la donnée durée dans la requête
         $duree = $route['durationMin'];
 
-
-        //============= NOMBRE DE KM ==================
 
         // Récupérer la donnée nombre de km dans la requête
         $nombre_de_km = $route['distanceKm'];
