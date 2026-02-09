@@ -1,0 +1,35 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Solde index{% endblock %}
+
+{% block body %}
+    <h1>Solde index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Montant_solde</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for solde in soldes %}
+            <tr>
+                <td>{{ solde.id }}</td>
+                <td>{{ solde.montantSolde }}</td>
+                <td>
+                    <a href="{{ path('app_solde_show', {'id': solde.id}) }}">show</a>
+                    <a href="{{ path('app_solde_edit', {'id': solde.id}) }}">edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="3">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_solde_new') }}">Create new</a>
+{% endblock %}
