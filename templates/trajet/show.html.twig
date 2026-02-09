@@ -1,0 +1,78 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Trajet{% endblock %}
+
+{% block body %}
+    <h1>Trajet</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Id</th>
+                <td>{{ trajet.id }}</td>
+            </tr>
+            <tr>
+                <th>Date_de_depart</th>
+                <td>{{ trajet.dateDeDepart ? trajet.dateDeDepart|date('Y-m-d H:i:s') : '' }}</td>
+            </tr>
+            <tr>
+                <th>Lieu_depart_conducteur</th>
+                <td>{{ trajet.lieuDepartConducteur }}</td>
+            </tr>
+            <tr>
+                <th>Longitude_lieu_depart_conducteur</th>
+                <td>{{ trajet.longitudeLieuDepartConducteur }}</td>
+            </tr>
+            <tr>
+                <th>Latitude_lieu_depart_conducteur</th>
+                <td>{{ trajet.latitudeLieuDepartConducteur }}</td>
+            </tr>
+            <tr>
+                <th>Longitude_lieu_arrive_conducteur</th>
+                <td>{{ trajet.longitudeLieuArriveConducteur }}</td>
+            </tr>
+            <tr>
+                <th>Latitude_lieu_arrive_conducteur</th>
+                <td>{{ trajet.latitudeLieuArriveConducteur }}</td>
+            </tr>
+            <tr>
+                <th>Duree</th>
+                <td>{{ trajet.duree }}</td>
+            </tr>
+            <tr>
+                <th>Nombre_de_km</th>
+                <td>{{ trajet.nombreDeKm }}</td>
+            </tr>
+            <tr>
+                <th>Nombre_de_place</th>
+                <td>{{ trajet.nombreDePlace }}</td>
+            </tr>
+            <tr>
+                <th>Prix</th>
+                <td>{{ trajet.prix }}</td>
+            </tr>
+            <tr>
+                <th>Date_de_publication</th>
+                <td>{{ trajet.dateDePublication ? trajet.dateDePublication|date('Y-m-d H:i:s') : '' }}</td>
+            </tr>
+            <tr>
+                <th>Nature_trajet</th>
+                <td>{{ trajet.natureTrajet }}</td>
+            </tr>
+            <tr>
+                <th>Type_trajet</th>
+                <td>{{ trajet.typeTrajet }}</td>
+            </tr>
+            <tr>
+                <th>Statut_valide</th>
+                <td>{{ trajet.statutValide }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_trajet_index') }}">back to list</a>
+
+    <a href="{{ path('app_trajet_edit', {'id': trajet.id}) }}">edit</a>
+
+    {{ include('trajet/_delete_form.html.twig') }}
+{% endblock %}

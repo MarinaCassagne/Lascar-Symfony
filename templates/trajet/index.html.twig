@@ -1,0 +1,61 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Trajet index{% endblock %}
+
+{% block body %}
+    <h1>Trajet index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Date_de_depart</th>
+                <th>Lieu_depart_conducteur</th>
+                <th>Longitude_lieu_depart_conducteur</th>
+                <th>Latitude_lieu_depart_conducteur</th>
+                <th>Longitude_lieu_arrive_conducteur</th>
+                <th>Latitude_lieu_arrive_conducteur</th>
+                <th>Duree</th>
+                <th>Nombre_de_km</th>
+                <th>Nombre_de_place</th>
+                <th>Prix</th>
+                <th>Date_de_publication</th>
+                <th>Nature_trajet</th>
+                <th>Type_trajet</th>
+                <th>Statut_valide</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for trajet in trajets %}
+            <tr>
+                <td>{{ trajet.id }}</td>
+                <td>{{ trajet.dateDeDepart ? trajet.dateDeDepart|date('Y-m-d H:i:s') : '' }}</td>
+                <td>{{ trajet.lieuDepartConducteur }}</td>
+                <td>{{ trajet.longitudeLieuDepartConducteur }}</td>
+                <td>{{ trajet.latitudeLieuDepartConducteur }}</td>
+                <td>{{ trajet.longitudeLieuArriveConducteur }}</td>
+                <td>{{ trajet.latitudeLieuArriveConducteur }}</td>
+                <td>{{ trajet.duree }}</td>
+                <td>{{ trajet.nombreDeKm }}</td>
+                <td>{{ trajet.nombreDePlace }}</td>
+                <td>{{ trajet.prix }}</td>
+                <td>{{ trajet.dateDePublication ? trajet.dateDePublication|date('Y-m-d H:i:s') : '' }}</td>
+                <td>{{ trajet.natureTrajet }}</td>
+                <td>{{ trajet.typeTrajet }}</td>
+                <td>{{ trajet.statutValide }}</td>
+                <td>
+                    <a href="{{ path('app_trajet_show', {'id': trajet.id}) }}">show</a>
+                    <a href="{{ path('app_trajet_edit', {'id': trajet.id}) }}">edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="16">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_trajet_new') }}">Create new</a>
+{% endblock %}
