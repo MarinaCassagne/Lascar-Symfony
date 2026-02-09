@@ -1455,6 +1455,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     generate_final_classes?: bool|Param, // Default: true
  *     generate_final_entities?: bool|Param, // Default: false
  * }
+
  * @psalm-type NelmioCorsConfig = array{
  *     defaults?: array{
  *         allow_credentials?: bool|Param, // Default: false
@@ -1483,6 +1484,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         skip_same_as_origin?: bool|Param,
  *     }>,
  * }
+
  * @psalm-type ConfigType = array{
  *     imports?: ImportsConfig,
  *     parameters?: ParametersConfig,
