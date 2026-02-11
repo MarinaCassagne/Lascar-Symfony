@@ -16,6 +16,10 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class UserController extends AbstractController
 {
+
+    #[Route('/api/login', name: 'api_login', methods: ['POST'])]
+    public function login(): void {}
+
     #[Route('/api/users', name: 'api_users_list', methods: ['GET'])]
     public function list(UserRepository $repository): JsonResponse
     {
