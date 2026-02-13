@@ -165,65 +165,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function isPermisDeConduire(): ?bool
-    {
-        return $this->permis_de_conduire;
-    }
-
-
-    public function getPermisDeConduire(): ?bool
-    {
-        return $this->permis_de_conduire;
-    }
-
-
-    public function setPermisDeConduire(?bool $permis_de_conduire): static
-    {
-        $this->permis_de_conduire = $permis_de_conduire;
-
-        return $this;
-    }
-
-    public function isCompteValide(): ?bool
-    {
-        return $this->compteValide;
-    }
-
-    public function getCompteValide(): ?bool
-    {
-        return $this->compteValide;
-    }
-
-
-    public function setCompteValide(bool $compteValide): static
-    {
-        $this->compteValide = $compteValide;
-
-        return $this;
-    }
-
-    public function getIdModeration(): ?Moderation
-    {
-        return $this->idModeration;
-    }
-
-    public function setIdModeration(?Moderation $idModeration): static
-    {
-        // unset the owning side of the relation if necessary
-        if ($idModeration === null && $this->idModeration !== null) {
-            $this->idModeration->setUser(null);
-        }
-
-        // set the owning side of the relation if necessary
-        if ($idModeration !== null && $idModeration->getUser() !== $this) {
-            $idModeration->setUser($this);
-        }
-
-        $this->idModeration = $idModeration;
-
-        return $this;
-    }
-
     /**
      * @return Collection<int, Trajet>
      */

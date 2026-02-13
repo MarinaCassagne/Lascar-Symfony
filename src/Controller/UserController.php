@@ -86,20 +86,13 @@ class UserController extends AbstractController
             return $this->errorResponse('mot de passe is required.', Response::HTTP_BAD_REQUEST);
         }
 
-        $compte_valide = trim((bool) ($data['compte_valide'] ?? ''));
-        if ($compte_valide === '') {
-            return $this->errorResponse('Compte valide is required.', Response::HTTP_BAD_REQUEST);
-        }
-
 
         $user = (new User())
             ->setNom($nom)
             ->setPrenom($prenom)
             ->setAge($age)
             ->setTelephone($telephone)
-            ->setEmail($email)
-            ->setPermisDeConduire($permis_de_conduire)
-            ->setCompteValide($compte_valide);
+            ->setEmail($email);
 
         $hashedPassword = $passwordHasher->hashPassword($user, $mot_de_passe);
         $user->setMotDePasse($hashedPassword);
