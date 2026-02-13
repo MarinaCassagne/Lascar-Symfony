@@ -244,8 +244,6 @@ final class TrajetController extends AbstractController
 
         //======== DATE DE PUBLICATION ================
 
-        // Récupérer la date de publication dans la requête
-        $date_de_publication = $data['date_de_publication'] ?? '';
 
         // TODO AJOUTER LA VÉRIFICATION DU FORMAT DE LA DATE : Utiliser DateTimeValidator ?
         // Nettoyer et valider la data $date_de_publication
@@ -257,13 +255,7 @@ final class TrajetController extends AbstractController
         //     return $this->errorResponse('Publication date is not format Y-m-d H:i:s.', Response::HTTP_BAD_REQUEST);
         // }
 
-        // Si la date de publication n'est pas renseignée, 
-        if ($date_de_publication === '') {
-            // Alors retourner une erreur avec le code HTTP (HperTexte Transfer Protocol) 400.
-            return $this->errorResponse('Publication date is required.', Response::HTTP_BAD_REQUEST);
-        }
-
-        $date_publication = new \DateTime($date_de_publication);
+        $date_publication = new \DateTime();
 
 
         // //======== ID MODÉRATION ========
@@ -278,17 +270,14 @@ final class TrajetController extends AbstractController
 
         //======== ID USER ========
 
-        if (!isset($data['user_id'])) {
-            return $this->errorResponse('User ID is required.', Response::HTTP_BAD_REQUEST);
+        $user = $this->getUser();
+
+        if (!$user) {
+            return $this->errorResponse('Unauthorized.', Response::HTTP_UNAUTHORIZED);
         }
 
-
-        // Récupérer l'idUser dans la requête de la personne ayant proposer le trajet
-        $User = $entityManager->getRepository(User::class)->find($data['user_id']);
-
-        // Renvoyer une message si idUser non trouvé avec le code HTTP (HperTexte Transfer Protocol) 400.
-        if (!$User) {
-            return $this->errorResponse('User id : {User} not found.', Response::HTTP_BAD_REQUEST);
+        if ($user->isPermisDeConduire() === false){
+            return $this->errorResponse("Vous n'avez pas le permis ou vous ne l'avez pas renseigner", Response::HTTP_BAD_REQUEST);
         }
 
         // //======== ID ÉTAPE TRAJET ========
@@ -299,16 +288,6 @@ final class TrajetController extends AbstractController
         // // Renvoyer une message si idEtapeTrajet non trouvé avec le code HTTP (HperTexte Transfer Protocol) 400.
         // if (!$idEtapeTrajet) {
         //     return $this->errorResponse('Journey stage id : {idEtapeTrajet} not found.', Response::HTTP_BAD_REQUEST);
-        // }
-
-        // //======== ID RÉSERVATION ========
-
-        // // Récupérer l'idReservation dans la requête associé à l'i
-        // $idReservation = $entityManager->getRepository(Reservation::class)->find($data['idReservation']);
-
-        // // Renvoyer une message si idEtapeTrajet non trouvé avec le code HTTP (HperTexte Transfer Protocol) 400.
-        // if (!$idReservation) {
-        //     return $this->errorResponse('Reservation id : {idReservation} not found.', Response::HTTP_BAD_REQUEST);
         // }
 
         // ==============================================
@@ -332,10 +311,8 @@ final class TrajetController extends AbstractController
             ->setTypeTrajet($type_trajet)
             ->setStatutValide($statut_valide)
             ->setDateDePublication($date_publication)
-            // ->setIdModeration($idModeration)
-            ->setUser($User);
+            ->setUser($user);
         // ->addIdEtapeTrajet($idEtapeTrajet)
-        // ->addIdReservation($idReservation);
 
         // Sauvegarder le trajet dans la BDD
 

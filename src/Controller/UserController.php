@@ -16,6 +16,11 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class UserController extends AbstractController
 {
+    #[Route('/api/login', name: 'api_users_login', methods: ['POST'])]
+    public function login(): void
+    {
+    }
+
     #[Route('/api/users', name: 'api_users_list', methods: ['GET'])]
     public function list(UserRepository $repository): JsonResponse
     {
@@ -119,7 +124,8 @@ class UserController extends AbstractController
         int $id,
         Request $request,
         UserRepository $repository,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        UserPasswordHasherInterface $passwordHasher
     ): JsonResponse {
         $user = $repository->find($id);
 
@@ -180,7 +186,9 @@ class UserController extends AbstractController
             if ($mot_de_passe === '') {
                 return $this->errorResponse('mot de passe is required.', Response::HTTP_BAD_REQUEST);
             }
-            $user->setMotdepasse($mot_de_passe);
+
+            $hashedPassword = $passwordHasher->hashPassword($user, $mot_de_passe);
+            $user->setMotdepasse($hashedPassword);
         }
 
 

@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Reservation;
 use App\Entity\User;
+use App\Entity\Trajet;
 use App\Enum\StatutReservation;
 use App\Repository\ReservationRepository;
 use DateTime;
@@ -13,45 +14,65 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use App\Service\OpenStreetMapService;
 
 class ReservationController extends AbstractController
 {
+    // Fonction pour lister toutes les réservations 
     #[Route('/api/reservations', name: 'api_reservations_list', methods: ['GET'])]
-    public function list(ReservationRepository $repository): JsonResponse
+    public function listeReservations(ReservationRepository $repository): JsonResponse
     {
+        // Créer un tableau php en récupérant chaque élément Réservations dans ma base de données avec la méthode findAll
+        // et les mets au format voulu avec la fonction serializeReservation créé plus bas
         $reservations = array_map(
             fn(Reservation $reservation) => $this->serializeReservation($reservation),
             $repository->findAll()
         );
 
+        // Transforme le tableau PHP en tableau JSON
         return $this->json($reservations);
     }
 
+
+    // Fonction pour afficher une réservations en fonction de l'ID
     #[Route('/api/reservations/{id}', name: 'api_reservations_show', methods: ['GET'])]
-    public function show(int $id, ReservationRepository $repository): JsonResponse
+    public function findReservationByID(int $id, ReservationRepository $repository): JsonResponse
     {
+        // Stockage de la réservation dans une variable
+        // Méthode Find()=> permet de trouver une instance grâce à la Primary Key (ici ID)
         $reservation = $repository->find($id);
 
+        // Vérification qu'il me renvoie bien une réservation sinon message d'erreur
         if (!$reservation) {
             return $this->errorResponse('Reservation not found.', Response::HTTP_NOT_FOUND);
         }
 
+        // Si Reservation trouvé renvoie la réservation au format gérer avec la fonction serializeReservation crée plus bas.
         return $this->json($this->serializeReservation($reservation));
     }
 
-    #[Route('/api/reserver', name: 'api_reservations_create', methods: ['POST'])]
-    public function create(Request $request, EntityManagerInterface $entityManager): JsonResponse
+
+    // Fonction pour créer une réservation
+    #[Route('/api/trajets/{id}/reserver', name: 'api_reservations_create', methods: ['POST'])]
+    public function reserver(Trajet $trajet,Request $request, EntityManagerInterface $entityManager, OpenStreetMapService $osm): JsonResponse
     {
         $data = $this->decodeJson($request);
         if ($data === null) {
             return $this->errorResponse('Invalid JSON body.', Response::HTTP_BAD_REQUEST);
         }
 
-        // Validation du numéro de réservation
-        $numeroReservation = trim((string) ($data['numero_reservation'] ?? ''));
-        if ($numeroReservation === '') {
-            return $this->errorResponse('Numero de reservation is required.', Response::HTTP_BAD_REQUEST);
+        $user = $this->getUser();
+
+        if (!$user) {
+            return $this->errorResponse('Unauthorized.', Response::HTTP_UNAUTHORIZED);
         }
+
+        $id_User = $user->getId();
+
+        $id_Trajet = $trajet->getId();
+        $random = rand(0, 100);
+        // Validation du numéro de réservation
+        $numeroReservation = $id_User . '-' . $id_Trajet . '-' . $random;
 
         // Validation des dates
         $dateReservation = new \DateTime();
@@ -67,35 +88,31 @@ class ReservationController extends AbstractController
         }
 
         // Validation des coordonnées GPS
-        $longitudeDepartPassager = $this->parseFloat($data['longitude_point_de_depart_passager'] ?? null, $error);
-        if ($longitudeDepartPassager === null) {
-            return $this->errorResponse($error ?? 'Invalid longitude_point_de_depart_passager.', Response::HTTP_BAD_REQUEST);
+        $lieu_depart = $data['lieu_de_depart'];
+
+        if ($lieu_depart === '' || $lieu_depart === null) {
+            return $this->errorResponse('Departure place is required.', Response::HTTP_BAD_REQUEST);
         }
 
-        $latitudeDepartPassager = $this->parseFloat($data['latitude_point_de_depart_passager'] ?? null, $error);
-        if ($latitudeDepartPassager === null) {
-            return $this->errorResponse($error ?? 'Invalid latitude_point_de_depart_passager.', Response::HTTP_BAD_REQUEST);
+        // Je récupère les coordonnées du lieu de départ
+        $coordDepart = $osm->geocode($lieu_depart);
+
+        $lieu_arrivee = $data['lieu_arrivee'];
+
+        if ($lieu_arrivee === '' || $lieu_arrivee === null) {
+            return $this->errorResponse('Departure place is required.', Response::HTTP_BAD_REQUEST);
         }
 
-        $longitudeArrivePassager = $this->parseFloat($data['longitude_point_arrive_passager'] ?? null, $error);
-        if ($longitudeArrivePassager === null) {
-            return $this->errorResponse($error ?? 'Invalid longitude_point_arrive_passager.', Response::HTTP_BAD_REQUEST);
-        }
+        // Je récupère les coordonnées du lieu de départ
+        $coordArrivee = $osm->geocode($lieu_arrivee);
 
-        $latitudeArrivePassager = $this->parseFloat($data['latitude_point_arrive_passager'] ?? null, $error);
-        if ($latitudeArrivePassager === null) {
-            return $this->errorResponse($error ?? 'Invalid latitude_point_arrive_passager.', Response::HTTP_BAD_REQUEST);
-        }
+        $longitudeDepartPassager = $coordDepart['lon'];
 
-        $longitudeRdvPassager = $this->parseFloat($data['longitude_point_de_rdv_passager'] ?? null, $error);
-        if ($longitudeRdvPassager === null) {
-            return $this->errorResponse($error ?? 'Invalid longitude_point_de_rdv_passager.', Response::HTTP_BAD_REQUEST);
-        }
+        $latitudeDepartPassager = $coordDepart['lat'];
 
-        $latitudeRdvPassager = $this->parseFloat($data['latitude_point_de_rdv_passager'] ?? null, $error);
-        if ($latitudeRdvPassager === null) {
-            return $this->errorResponse($error ?? 'Invalid latitude_point_de_rdv_passager.', Response::HTTP_BAD_REQUEST);
-        }
+        $longitudeArrivePassager = $coordArrivee['lon'];
+
+        $latitudeArrivePassager = $coordArrivee['lat'];
 
         // Validation du nombre de passagers
         $nombrePassager = $this->parseInt($data['nombre_de_passager'] ?? null, $error);
@@ -124,41 +141,24 @@ class ReservationController extends AbstractController
             );
         }
 
-        if (!isset($data['user_id'])) {
-            return $this->errorResponse('User ID is required.', Response::HTTP_BAD_REQUEST);
-        }
-
-        $user = $entityManager->find(User::class, $data['user_id']);
-        if (!$user) {
-            return $this->errorResponse('User not found.', Response::HTTP_BAD_REQUEST);
-        }
-
         // Validation du trajet_id
-        // if (!isset($data['trajet_id'])) {
-        //     return $this->errorResponse('Trajet ID is required.', Response::HTTP_BAD_REQUEST);
-        // }
-
-        // $trajet = $entityManager->getRepository(Trajet::class)->find($data['trajet_id']);
-        // if (!$trajet) {
-        //     return $this->errorResponse('Trajet not found.', Response::HTTP_BAD_REQUEST);
-        // }
 
         // Création de la réservation
         $reservation = (new Reservation())
             ->setNumeroReservation($numeroReservation)
             ->setDateReservation($dateReservation)
+            ->setLieuDepartPassager($lieu_depart)
+            ->setLieuArriveePassager($lieu_arrivee)
             ->setLongitudePointDeDepartPassager($longitudeDepartPassager)
             ->setLatitudePointDeDepartPassager($latitudeDepartPassager)
             ->setLongitudePointArrivePassager($longitudeArrivePassager)
             ->setLatitudePointArrivePassager($latitudeArrivePassager)
-            ->setLongitudePointDeRdvPassager($longitudeRdvPassager)
-            ->setLatitudePointDeRdvPassager($latitudeRdvPassager)
             ->setDateHeureDepart($dateHeureDepart)
             ->setDateHeureArrive($dateHeureArrive)
             ->setNombreDePassager($nombrePassager)
             ->setMontantTotalReservation($montantTotal)
             ->setStatutReservation($statutReservation)
-            // ->setTrajet($trajet)
+            ->setTrajet($trajet)
             ->setUser($user);
 
         $entityManager->persist($reservation);
@@ -393,12 +393,12 @@ class ReservationController extends AbstractController
             'id' => $reservation->getId(),
             'numero_reservation' => $reservation->getNumeroReservation(),
             'date_reservation' => $reservation->getDateReservation()->format(\DateTimeInterface::ATOM),
+            'lieu_depart' => $reservation->getLieuDepartPassager(),
+            'lieu_arrivee' => $reservation->getLieuArriveePassager(),
             'longitude_point_de_depart_passager' => $reservation->getLongitudePointDeDepartPassager(),
             'latitude_point_de_depart_passager' => $reservation->getLatitudePointDeDepartPassager(),
             'longitude_point_arrive_passager' => $reservation->getLongitudePointArrivePassager(),
             'latitude_point_arrive_passager' => $reservation->getLatitudePointArrivePassager(),
-            'longitude_point_de_rdv_passager' => $reservation->getLongitudePointDeRdvPassager(),
-            'latitude_point_de_rdv_passager' => $reservation->getLatitudePointDeRdvPassager(),
             'date_heure_depart' => $reservation->getDateHeureDepart()->format(\DateTimeInterface::ATOM),
             'date_heure_arrive' => $reservation->getDateHeureArrive()->format(\DateTimeInterface::ATOM),
             'nombre_de_passager' => $reservation->getNombreDePassager(),

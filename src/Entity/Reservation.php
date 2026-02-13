@@ -22,6 +22,12 @@ class Reservation
     private ?\DateTime $date_reservation = null;
 
     #[ORM\Column]
+    private ?string $lieu_depart = null;
+
+    #[ORM\Column]
+    private ?string $lieu_arrivee = null;
+
+    #[ORM\Column]
     private ?float $longitude_point_de_depart_passager = null;
 
     #[ORM\Column]
@@ -32,12 +38,6 @@ class Reservation
 
     #[ORM\Column]
     private ?float $latitude_point_arrive_passager = null;
-
-    #[ORM\Column]
-    private ?float $longitude_point_de_rdv_passager = null;
-
-    #[ORM\Column]
-    private ?float $latitude_point_de_rdv_passager = null;
 
     #[ORM\Column]
     private ?\DateTime $date_heure_depart = null;
@@ -90,6 +90,30 @@ class Reservation
         return $this;
     }
 
+    public function getLieuDepartPassager(): ?string
+    {
+        return $this->lieu_depart;
+    }
+
+    public function setLieuDepartPassager(string $lieu_depart): static
+    {
+        $this->lieu_depart = $lieu_depart;
+
+        return $this;
+    }
+
+    public function getLieuArriveePassager(): ?string
+    {
+        return $this->lieu_arrivee;
+    }
+
+    public function setLieuArriveePassager(string $lieu_arrivee): static
+    {
+        $this->lieu_arrivee = $lieu_arrivee;
+
+        return $this;
+    }
+
     public function getLongitudePointDeDepartPassager(): ?float
     {
         return $this->longitude_point_de_depart_passager;
@@ -134,30 +158,6 @@ class Reservation
     public function setLatitudePointArrivePassager(float $latitude_point_arrive_passager): static
     {
         $this->latitude_point_arrive_passager = $latitude_point_arrive_passager;
-
-        return $this;
-    }
-
-    public function getLongitudePointDeRdvPassager(): ?float
-    {
-        return $this->longitude_point_de_rdv_passager;
-    }
-
-    public function setLongitudePointDeRdvPassager(float $longitude_point_de_rdv_passager): static
-    {
-        $this->longitude_point_de_rdv_passager = $longitude_point_de_rdv_passager;
-
-        return $this;
-    }
-
-    public function getLatitudePointDeRdvPassager(): ?float
-    {
-        return $this->latitude_point_de_rdv_passager;
-    }
-
-    public function setLatitudePointDeRdvPassager(float $latitude_point_de_rdv_passager): static
-    {
-        $this->latitude_point_de_rdv_passager = $latitude_point_de_rdv_passager;
 
         return $this;
     }
