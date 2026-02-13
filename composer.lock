@@ -1265,8 +1265,6 @@
             "time": "2025-03-06T22:45:56+00:00"
         },
         {
-<<<<<<< HEAD
-=======
             "name": "friendsofsymfony/rest-bundle",
             "version": "3.9.0",
             "source": {
@@ -1627,7 +1625,6 @@
             "time": "2025-11-25T21:41:31+00:00"
         },
         {
->>>>>>> a3a4eaa5b7a9e9aaaa14d23a3a0ea50575462392
             "name": "lcobucci/jwt",
             "version": "5.6.0",
             "source": {
