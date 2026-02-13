@@ -14,10 +14,10 @@ use Symfony\Component\Routing\Attribute\Route;
 class VehiculeController extends AbstractController
 {
     #[Route('/api/vehicules', name: 'api_vehicules_list', methods: ['GET'])]
-    public function list(VehiculeRepository $repository): JsonResponse
+    public function listeVehicules(VehiculeRepository $repository): JsonResponse
     {
         $vehicules = array_map(
-            fn (Vehicule $vehicule) => $this->serializeVehicule($vehicule),
+            fn(Vehicule $vehicule) => $this->serializeVehicule($vehicule),
             $repository->findAll()
         );
 
@@ -36,8 +36,8 @@ class VehiculeController extends AbstractController
         return $this->json($this->serializeVehicule($vehicule));
     }
 
-    #[Route('/api/vehicules', name: 'api_vehicules_create', methods: ['POST'])]
-    public function create(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    #[Route('/api/ajout_vehicule', name: 'api_vehicules_create', methods: ['POST'])]
+    public function ajouterVehicule(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $data = $this->decodeJson($request);
         if ($data === null) {
@@ -59,10 +59,21 @@ class VehiculeController extends AbstractController
             return $this->errorResponse('Couleur is required.', Response::HTTP_BAD_REQUEST);
         }
 
+        $user = $this->getUser();
+
+        if (!$user) {
+            return $this->errorResponse('Unauthorized.', Response::HTTP_UNAUTHORIZED);
+        }
+
+        if ($user->isPermisDeConduire() === false) {
+            return $this->errorResponse("Vous n'avez pas le permis ou vous ne l'avez pas renseigner", Response::HTTP_BAD_REQUEST);
+        }
+
         $vehicule = (new Vehicule())
             ->setMarque($marque)
             ->setModele($modele)
-            ->setCouleur($couleur);
+            ->setCouleur($couleur)
+            ->setUser($user);
 
         $entityManager->persist($vehicule);
         $entityManager->flush();
@@ -71,7 +82,7 @@ class VehiculeController extends AbstractController
     }
 
     #[Route('/api/vehicules/{id}', name: 'api_vehicules_update', methods: ['PUT', 'PATCH'])]
-    public function update(int $id, Request $request, VehiculeRepository $repository, EntityManagerInterface $entityManager): JsonResponse 
+    public function updateVehicule(int $id, Request $request, VehiculeRepository $repository, EntityManagerInterface $entityManager): JsonResponse
     {
         $vehicule = $repository->find($id);
 
@@ -116,7 +127,7 @@ class VehiculeController extends AbstractController
     }
 
     #[Route('/api/vehicules/{id}', name: 'api_vehicules_delete', methods: ['DELETE'])]
-    public function delete(int $id, VehiculeRepository $repository, EntityManagerInterface $entityManager): JsonResponse 
+    public function delete(int $id, VehiculeRepository $repository, EntityManagerInterface $entityManager): JsonResponse
     {
         $vehicule = $repository->find($id);
 
@@ -150,7 +161,11 @@ class VehiculeController extends AbstractController
             'marque' => $vehicule->getMarque(),
             'modele' => $vehicule->getModele(),
             'couleur' => $vehicule->getCouleur(),
-            'createdAt' => $vehicule->getCreatedAt()->format(\DateTimeInterface::ATOM),
+            'user' => [
+                'id' => $vehicule->getUser()->getId(),
+                'nom' => $vehicule->getUser()->getNom(),
+                'prenom' => $vehicule->getUser()->getPrenom(),
+            ],
         ];
     }
 

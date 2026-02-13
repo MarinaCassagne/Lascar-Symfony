@@ -95,7 +95,8 @@ class OpenStreetMapService
                 //  "geometry": 'lien polilyne'
                 // }
                 // Ce lien peut être utiliser avec leaflet ou d'autre outil pour afficher le trajet sur une map.
-                'overview' => 'false'  
+                'overview' => 'false',
+                'steps'=> 'true' 
             ]
         ]);
 

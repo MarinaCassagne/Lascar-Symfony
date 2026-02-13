@@ -294,7 +294,7 @@ class ReservationController extends AbstractController
     }
 
     #[Route('/api/reservations/{id}', name: 'api_reservations_delete', methods: ['DELETE'])]
-    public function delete(int $id, ReservationRepository $repository, EntityManagerInterface $entityManager): JsonResponse
+    public function delete(int $id, ReservationRepository $repository, EntityManagerInterface $entityManager)
     {
         $reservation = $repository->find($id);
 
@@ -305,7 +305,7 @@ class ReservationController extends AbstractController
         $entityManager->remove($reservation);
         $entityManager->flush();
 
-        return $this->json(null, Response::HTTP_NO_CONTENT);
+        return $this->redirectToRoute('api_reservations_list', [], Response::HTTP_SEE_OTHER);
     }
 
     private function decodeJson(Request $request): ?array

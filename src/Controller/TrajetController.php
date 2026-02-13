@@ -84,7 +84,7 @@ final class TrajetController extends AbstractController
         $coordDepart = $osm->geocode($lieu_depart);
 
 
-        
+
         $lieu_arrivee = $data['lieu_arrivee'];
 
         if ($lieu_arrivee === '' || $lieu_arrivee === null) {
@@ -248,25 +248,8 @@ final class TrajetController extends AbstractController
         // TODO AJOUTER LA VÉRIFICATION DU FORMAT DE LA DATE : Utiliser DateTimeValidator ?
         // Nettoyer et valider la data $date_de_publication
 
-        // Si la date de publication n'est pas au bon format, 
-        // if ()
-        // {
-        //     Alors retourner une erreur
-        //     return $this->errorResponse('Publication date is not format Y-m-d H:i:s.', Response::HTTP_BAD_REQUEST);
-        // }
-
         $date_publication = new \DateTime();
 
-
-        // //======== ID MODÉRATION ========
-
-        // // Récupérer l'id Modération si il en existe une pour ce trajet
-        // $idModeration = $entityManager->getRepository(Moderation::class)->find($data['idModeration']);
-
-        // // Renvoyer une message si idModeration avec le code HTTP (HperTexte Transfer Protocol) 400. 
-        // if (!$idModeration) {
-        //     return $this->errorResponse('Moderation id : {idModeration} not found.', Response::HTTP_BAD_REQUEST);
-        // }
 
         //======== ID USER ========
 
@@ -276,7 +259,7 @@ final class TrajetController extends AbstractController
             return $this->errorResponse('Unauthorized.', Response::HTTP_UNAUTHORIZED);
         }
 
-        if ($user->isPermisDeConduire() === false){
+        if ($user->isPermisDeConduire() === false) {
             return $this->errorResponse("Vous n'avez pas le permis ou vous ne l'avez pas renseigner", Response::HTTP_BAD_REQUEST);
         }
 
@@ -352,14 +335,15 @@ final class TrajetController extends AbstractController
         int $id,
         Request $request,
         TrajetRepository $repository,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        OpenStreetMapService $osm
     ): JsonResponse {
         // Chercher dans la base de donnée le trajet à modifier via son id 
         $trajet = $repository->find($id);
 
         // Si le produit n'existe pas, retourner une erreur 404.
         if (!$trajet) {
-            return $this->errorResponse('Reservation not found.', Response::HTTP_NOT_FOUND);
+            return $this->errorResponse('trajet not found.', Response::HTTP_NOT_FOUND);
         }
 
         // Décode le JSON de la requête de modification
@@ -371,128 +355,138 @@ final class TrajetController extends AbstractController
             return $this->errorResponse('Invalid JSON body.', Response::HTTP_BAD_REQUEST);
         }
 
-        // Récupérer la méthode de la requête
-        $isPut = $request->getMethod() === 'PUT';
+        $user = $this->getUser();
 
-
-        //=== MODIFIFIER DATE DE DÉPART================
-        if (array_key_exists('date_de_depart', $data) || $isPut) {
-
-            $date_de_depart = $this->parseDateTime($data['date_heure_depart'] ?? null, $error);
-            ;
-
-            if ($date_de_depart === '') {
-                return $this->errorResponse('Departure date is required.', Response::HTTP_BAD_REQUEST);
-            }
-            $trajet->setDateDeDepart($date_de_depart);
+        if ($user->getId() !== $trajet->getUser()->getId()) {
+            return $this->errorResponse("Unauthorized: Vous n'êtes pas autorisé à modifier ce trajet  ", Response::HTTP_UNAUTHORIZED);
         }
 
-        //=== MODIFIER ADRESSE LIEU DE DÉPART ================
-        if (array_key_exists('latitude_lieu_de_depart_conducteur', $data) || $isPut) {
-            $value = $this->parseFloat($data, $data['latitude_lieu_depart_conducteur'] ?? null, true, $error);
+        $adresseModifiee = false;
+
+        foreach ($data as $key => $value) {
+
+            // Si la valeur est null, on ne touche pas au trajet
             if ($value === null) {
-                return $this->errorResponse($error ?? 'Latitude starting point driver is invalid.', Response::HTTP_BAD_REQUEST);
-            }
-            $trajet->setLatitudeLieuDepartConducteur($value);
-
-        }
-
-        if (array_key_exists('longitude_lieu_de_depart_conducteur', $data) || $isPut) {
-            $value = $this->parseFloat($data, $data['longitude_lieu_depart_conducteur'] ?? null, true, $error);
-            if ($value === null) {
-                return $this->errorResponse($error ?? 'Longitude starting point driver is invalid.', Response::HTTP_BAD_REQUEST);
-            }
-            $trajet->setLongitudeLieuDepartConducteur($value);
-
-        }
-
-        //=== MODIFIER ADRESSE LIEU DE D'ARRIVÉE ========================
-        if (array_key_exists('latitude_lieu_arrive_conducteur', $data) || $isPut) {
-            $value = $this->parseFloat($data, $data['latitude_lieu_arrive_conducteur'] ?? null, true, $error);
-            if ($value === null) {
-                return $this->errorResponse($error ?? 'Latitude of the arrival point driver is invalid.', Response::HTTP_BAD_REQUEST);
-            }
-            $trajet->setLatitudeLieuArriveConducteur($value);
-
-        }
-
-        if (array_key_exists('longitude_lieu_arrive_conducteur', $data) || $isPut) {
-            $value = $this->parseFloat($data, $data['longitude_lieu_arrive_conducteur'] ?? null, true, $error);
-            if ($value === null) {
-                return $this->errorResponse($error ?? 'Longitude of the arrival point driver is invalid.', Response::HTTP_BAD_REQUEST);
-            }
-            $trajet->setLongitudeLieuArriveConducteur($value);
-        }
-
-        //============= MODIFIER DURÉE =========================
-
-        if (array_key_exists('duree', $data) || $isPut) {
-            $duree = $this->parseInt($data['duree'] ?? null, $error);
-            if ($duree === null || $duree <= 0) {
-                return $this->errorResponse($error ?? 'The duration must be greater than 0 minutes', Response::HTTP_BAD_REQUEST);
-            }
-            $trajet->setDuree($duree);
-        }
-
-
-        //============= NOMBRE DE KM ==================
-
-        if (array_key_exists('nombre_de_km', $data) || $isPut) {
-            $nombre_de_km = $this->parseInt($data['nombre_de_km'] ?? null, $error);
-            if ($duree === null || $duree <= 0) {
-                return $this->errorResponse($error ?? 'The duration must be greater than 0 minutes', Response::HTTP_BAD_REQUEST);
-            }
-            $trajet->setNombreDeKm($nombre_de_km);
-        }
-
-        //============= NOMBRE DE PLACES ===============
-
-        if (array_key_exists('nombre_de_place', $data) || $isPut) {
-            $nombre_de_place = $this->parseInt($data['nombre_de_place'] ?? null, $error);
-            if ($nombre_de_place === null || $nombre_de_place < 1) {
-                return $this->errorResponse($error ?? 'The number of places must be at least 1', Response::HTTP_BAD_REQUEST);
-            }
-            $trajet->setNombreDeKm($nombre_de_place);
-        }
-
-        //============= PRIX ===========================
-
-        if (array_key_exists('prix', $data) || $isPut) {
-            $prix = $this->parseFloat($data, $data['prix'] ?? null, true, $error);
-
-            if ($prix === null) {
-                // Si le prix est null, retourner une erreur avec le code HTTP (HperTexte Transfer Protocol) 400.
-                return $this->errorResponse($error ?? 'Price is invalid.', Response::HTTP_BAD_REQUEST);
+                continue;
             }
 
-            $trajet->setPrix($prix);
+            switch ($key) {
+
+                case 'lieu_de_depart':
+                    $coord = $osm->geocode($value);
+                    if (!$coord || !isset($coord['lat'], $coord['lon'])) {
+                        return $this->errorResponse("Adresse invalide pour le départ", 400);
+                    }
+
+                    $trajet->setLieuDepartConducteur($value)
+                        ->setLatitudeLieuDepartConducteur($coord['lat'])
+                        ->setLongitudeLieuDepartConducteur($coord['lon']);
+
+                    $adresseModifiee = true;
+                    break;
+
+                case 'lieu_arrivee':
+                    $coord = $osm->geocode($value);
+                    if (!$coord || !isset($coord['lat'], $coord['lon'])) {
+                        return $this->errorResponse("Adresse invalide pour l'arrivée", 400);
+                    }
+
+                    $trajet->setLieuArriveeConducteur($value)
+                        ->setLatitudeLieuArriveConducteur($coord['lat'])
+                        ->setLongitudeLieuArriveConducteur($coord['lon']);
+
+                    $adresseModifiee = true;
+                    break;
+
+
+                case 'nombre_de_place':
+                    $places = $this->parseInt($value, $error);
+                    if ($places === null || $places < 1) {
+                        return $this->errorResponse($error ?? 'Number of places must be at least 1.', 400);
+                    }
+                    $trajet->setNombreDePlace($places);
+                    break;
+
+                case 'prix':
+                    $prix = $this->parseFloat($data, $value, true, $error);
+                    if ($prix === null) {
+                        return $this->errorResponse($error ?? 'Price invalid.', 400);
+                    }
+                    $trajet->setPrix($prix);
+                    break;
+                case 'nature_trajet':
+                    try {
+                        $nature_trajet = NatureTrajet::from($value);
+                    } catch (\ValueError $e) {
+                        return $this->errorResponse(
+                            'Nature of the journey must be Offre or Demande.',
+                            Response::HTTP_BAD_REQUEST
+                        );
+                    }
+
+                case 'type_trajet':
+                    try {
+                        $type_trajet = TypeTrajet::from($value);
+                    } catch (\ValueError $e) {
+                        return $this->errorResponse(
+                            'Type of the journey must be "Domicile Travail" or "Évènement" .',
+                            Response::HTTP_BAD_REQUEST
+                        );
+                    }
+
+                case 'statut_valide':
+                    try {
+                        $statut_valide = StatutValidTrajet::from($value);
+                    } catch (\ValueError $e) {
+                        return $this->errorResponse(
+                            'Statut of the journey must be "En attente", "Valide" , or "Refusé" .',
+                            Response::HTTP_BAD_REQUEST
+                        );
+                    }
+            }
         }
 
-        //============= NatureTrajet =========================== 
+        // 🔥 Recalcul une seule fois à la fin
+        if ($adresseModifiee) {
 
-        // TODO 
-        // $nature_trajet
-        // $type_trajet
-        // $statut_valide
-        // $date_de_publication
-        // $idModeration
-        // $User
-        // $idEtapeTrajet
-        // $idReservation
+            $points = [
+                [
+                    'lat' => $trajet->getLatitudeLieuDepartConducteur(),
+                    'lon' => $trajet->getLongitudeLieuDepartConducteur()
+                ],
+                [
+                    'lat' => $trajet->getLatitudeLieuArriveConducteur(),
+                    'lon' => $trajet->getLongitudeLieuArriveConducteur()
+                ]
+            ];
+
+            $donnees = $osm->donneesTrajet($points);
+
+            $trajet->setDuree($donnees['durationMin']);
+            $trajet->setNombreDeKm($donnees['distanceKm']);
+        }
+
+        $entityManager->flush();
 
         // Sinon retouner le détails du produit avec le status HTTP 302
         return $this->json($this->serializeTrajet($trajet), Response::HTTP_FOUND);
     }
 
-    #[Route('/{id}', name: 'app_trajet_delete', methods: ['POST'])]
-    public function delete(Request $request, Trajet $trajet, EntityManagerInterface $entityManager): Response
+    #[Route('/api/trajets/{id}', name: 'app_trajet_delete', methods: ['DELETE'])]
+    public function supprimerTrajet(int $id, Request $request, TrajetRepository $repository, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete' . $trajet->getId(), $request->getPayload()->getString('_token'))) {
-            $entityManager->remove($trajet);
-            $entityManager->flush();
+        
+        $trajet = $repository->find($id);
+
+        if (!$trajet) {
+            return $this->errorResponse('Trajet not found.', Response::HTTP_NOT_FOUND);
         }
 
-        return $this->redirectToRoute('app_trajet_index', [], Response::HTTP_SEE_OTHER);
+        $entityManager->remove($trajet);
+        $entityManager->flush();
+        
+
+        return $this->redirectToRoute('app_trajets_list', [], Response::HTTP_SEE_OTHER);
     }
     // ========================================================================
     //                        MÉTHODES PRIVÉES
@@ -525,31 +519,31 @@ final class TrajetController extends AbstractController
      * @param Trajet $trajet: L'objet Trajet à convertir
      */
     private function serializeTrajet(Trajet $trajet): array
-{
-    return [
-        'id' => $trajet->getId(),
-        'date_de_depart' => $trajet->getDateDeDepart()->format('Y-m-d H:i:s'),
-        'lieu_depart' => $trajet->getLieuDepartConducteur(),
-        'latitude_lieu_depart_conducteur' => $trajet->getLatitudeLieuDepartConducteur(),
-        'longitude_lieu_depart_conducteur' => $trajet->getLongitudeLieuDepartConducteur(),
-        'lieu_arrivee' => $trajet->getLieuArriveeConducteur(),
-        'latitude_lieu_arrive_conducteur' => $trajet->getLatitudeLieuArriveConducteur(),
-        'longitude_lieu_arrive_conducteur' => $trajet->getLongitudeLieuArriveConducteur(),
-        'duree' => $trajet->getDuree(),
-        'nombre_de_km' => $trajet->getNombreDeKm(),
-        'nombre_de_place' => $trajet->getNombreDePlace(),
-        'prix' => $trajet->getPrix(),
-        'date_de_publication' => $trajet->getDateDePublication()->format('Y-m-d H:i:s'),
-        'nature_trajet' => $trajet->getNatureTrajet()->value,
-        'type_trajet' => $trajet->getTypeTrajet()->value,
-        'statut_valide' => $trajet->getStatutValide()->value,
-        'user' => [
-            'id' => $trajet->getUser()->getId(),
-            'nom' => $trajet->getUser()->getNom(),
-            'prenom' => $trajet->getUser()->getPrenom(),
-        ],
-    ];
-}
+    {
+        return [
+            'id' => $trajet->getId(),
+            'date_de_depart' => $trajet->getDateDeDepart()->format('Y-m-d H:i:s'),
+            'lieu_depart' => $trajet->getLieuDepartConducteur(),
+            'latitude_lieu_depart_conducteur' => $trajet->getLatitudeLieuDepartConducteur(),
+            'longitude_lieu_depart_conducteur' => $trajet->getLongitudeLieuDepartConducteur(),
+            'lieu_arrivee' => $trajet->getLieuArriveeConducteur(),
+            'latitude_lieu_arrive_conducteur' => $trajet->getLatitudeLieuArriveConducteur(),
+            'longitude_lieu_arrive_conducteur' => $trajet->getLongitudeLieuArriveConducteur(),
+            'duree' => $trajet->getDuree(),
+            'nombre_de_km' => $trajet->getNombreDeKm(),
+            'nombre_de_place' => $trajet->getNombreDePlace(),
+            'prix' => $trajet->getPrix(),
+            'date_de_publication' => $trajet->getDateDePublication()->format('Y-m-d H:i:s'),
+            'nature_trajet' => $trajet->getNatureTrajet()->value,
+            'type_trajet' => $trajet->getTypeTrajet()->value,
+            'statut_valide' => $trajet->getStatutValide()->value,
+            'user' => [
+                'id' => $trajet->getUser()->getId(),
+                'nom' => $trajet->getUser()->getNom(),
+                'prenom' => $trajet->getUser()->getPrenom(),
+            ],
+        ];
+    }
 
 
     /**
