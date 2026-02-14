@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Entity\Solde;
 use App\Repository\UserRepository;
+use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -12,6 +13,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+
 
 
 class UserController extends AbstractController
@@ -22,7 +25,7 @@ class UserController extends AbstractController
     }
 
     #[Route('/api/users', name: 'api_users_list', methods: ['GET'])]
-    public function list(UserRepository $repository): JsonResponse
+    public function listeUsers(UserRepository $repository): JsonResponse
     {
         $users = array_map(
             fn(User $user) => $this->serializeUser($user),
@@ -33,7 +36,7 @@ class UserController extends AbstractController
     }
 
     #[Route('/api/users/{id}', name: 'api_users_show', methods: ['GET'])]
-    public function show(int $id, UserRepository $repository): JsonResponse
+    public function findUserById(int $id, UserRepository $repository): JsonResponse
     {
         $user = $repository->find($id);
 
@@ -45,41 +48,29 @@ class UserController extends AbstractController
     }
 
     #[Route('/api/users/register', name: 'api_users_create', methods: ['POST'])]
-    public function create(Request $request, EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordHasher): JsonResponse
+    public function inscription(Request $request, EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordHasher): JsonResponse
     {
         $data = $this->decodeJson($request);
         if ($data === null) {
             return $this->errorResponse('Invalid JSON body.', Response::HTTP_BAD_REQUEST);
         }
 
-        $nom = trim((string) ($data['nom'] ?? ''));
-        if ($nom === '') {
-            return $this->errorResponse('Nom is required.', Response::HTTP_BAD_REQUEST);
+        foreach ($data as $key => $value) {
+            if ($value === '') {
+                return $this->errorResponse("{$key} is required", Response::HTTP_BAD_REQUEST);
+            }
         }
+
+        $nom = trim((string) ($data['nom'] ?? ''));
 
         $prenom = trim((string) ($data['prenom'] ?? ''));
-        if ($prenom === '') {
-            return $this->errorResponse('Prenom is required.', Response::HTTP_BAD_REQUEST);
-        }
 
-        $age = trim((int) ($data['age'] ?? ''));
-        if ($age === '') {
-            return $this->errorResponse('age is required.', Response::HTTP_BAD_REQUEST);
-        }
+        $date_naissance = trim((string) ($data['date_naissance']));
+        $date = \DateTime::createFromFormat('d/m/Y', $date_naissance);
 
         $telephone = trim((string) ($data['telephone'] ?? ''));
-        if ($telephone === '') {
-            return $this->errorResponse('telephone is required.', Response::HTTP_BAD_REQUEST);
-        }
 
         $email = trim((string) ($data['email'] ?? ''));
-        if ($email === '') {
-            return $this->errorResponse('Email is required.', Response::HTTP_BAD_REQUEST);
-        }
-
-
-        $permis_de_conduire = trim((bool) ($data['permis_de_conduire'] ?? ''));
-
 
         $mot_de_passe = trim((string) ($data['mot_de_passe'] ?? ''));
         if ($mot_de_passe === '') {
@@ -90,7 +81,7 @@ class UserController extends AbstractController
         $user = (new User())
             ->setNom($nom)
             ->setPrenom($prenom)
-            ->setAge($age)
+            ->setDateNaissance($date)
             ->setTelephone($telephone)
             ->setEmail($email);
 
@@ -118,7 +109,8 @@ class UserController extends AbstractController
         Request $request,
         UserRepository $repository,
         EntityManagerInterface $entityManager,
-        UserPasswordHasherInterface $passwordHasher
+        UserPasswordHasherInterface $passwordHasher,
+        JWTTokenManagerInterface $jwtManager
     ): JsonResponse {
         $user = $repository->find($id);
 
@@ -131,78 +123,67 @@ class UserController extends AbstractController
             return $this->errorResponse('Invalid JSON body.', Response::HTTP_BAD_REQUEST);
         }
 
-        $isPut = $request->getMethod() === 'PUT';
+        $oldEmail = $user->getUserIdentifier();
+        $emailChanged = false;
 
-        if (array_key_exists('nom', $data) || $isPut) {
-            $nom = trim((string) ($data['nom'] ?? ''));
-            if ($nom === '') {
-                return $this->errorResponse('Nom is required.', Response::HTTP_BAD_REQUEST);
-            }
-            $user->setNom($nom);
-        }
+        foreach ($data as $key => $value) {
 
-        if (array_key_exists('prenom', $data) || $isPut) {
-            $prenom = trim((string) ($data['prenom'] ?? ''));
-            if ($prenom === '') {
-                return $this->errorResponse('prenom is required.', Response::HTTP_BAD_REQUEST);
-            }
-            $user->setPrenom($prenom);
-        }
-
-        if (array_key_exists('age', $data) || $isPut) {
-            $age = trim((int) ($data['age'] ?? ''));
-            if ($age === '') {
-                return $this->errorResponse('age is required.', Response::HTTP_BAD_REQUEST);
-            }
-            $user->setAge($age);
-        }
-
-        if (array_key_exists('telephone', $data) || $isPut) {
-            $telephone = trim((string) ($data['telephone'] ?? ''));
-            if ($telephone === '') {
-                return $this->errorResponse('telephone is required.', Response::HTTP_BAD_REQUEST);
-            }
-            $user->setTelephone($telephone);
-        }
-
-        if (array_key_exists('email', $data) || $isPut) {
-            $email = trim((string) ($data['email'] ?? ''));
-            if ($email === '') {
-                return $this->errorResponse('email is required.', Response::HTTP_BAD_REQUEST);
-            }
-            $user->setEmail($email);
-        }
-
-
-        if (array_key_exists('mot de passe', $data) || $isPut) {
-            $mot_de_passe = trim((string) ($data['mot de passe'] ?? ''));
-            if ($mot_de_passe === '') {
-                return $this->errorResponse('mot de passe is required.', Response::HTTP_BAD_REQUEST);
+            // Si la valeur est null, on ne touche pas au trajet
+            if ($value === null) {
+                continue;
             }
 
-            $hashedPassword = $passwordHasher->hashPassword($user, $mot_de_passe);
-            $user->setMotdepasse($hashedPassword);
-        }
+            switch ($key) {
+
+                case 'nom':
+                    $user->setNom($value);
+                    break;
+
+                case 'prenom':
+                    $user->setPrenom($value);
+                    break;
 
 
-        if (array_key_exists('compte valide', $data) || $isPut) {
-            $compte_valide = trim((bool) ($data['compte valide'] ?? ''));
-            if ($compte_valide === '') {
-                return $this->errorResponse('compte valide is required.', Response::HTTP_BAD_REQUEST);
+                case 'date_naissance':
+                    $date = \DateTime::createFromFormat('d/m/Y', $value);
+                    $user->setDateNaissance($date);
+                    break;
+
+                case 'telephone':
+                    $user->setTelephone($value);
+                    break;
+
+                case 'email':
+                    if ($value !== $oldEmail) {
+                        $emailChanged = true;
+                    }
+                    $user->setEmail($value);
+                    break;
+
+
+                case 'mot_de_passe':
+                    $hashedPassword = $passwordHasher->hashPassword($user, $value);
+                    $user->setMotDePasse($hashedPassword);
             }
-            $user->setCompteValide($compte_valide);
         }
-
-
-
 
         $entityManager->flush();
 
-        return $this->json($this->serializeUser($user));
+        $response = [
+            'user' => $this->serializeUser($user),
+        ];
+
+        if ($emailChanged) {
+            $token = $jwtManager->create($user);
+            $response['token'] = $token;
+        }
+
+        // Sinon retouner le détails du produit avec le status HTTP 302
+        return $this->json($response, Response::HTTP_OK);
     }
 
     #[Route('/api/users/{id}', name: 'api_users_delete', methods: ['DELETE'])]
-    public function delete(int $id, UserRepository $repository, EntityManagerInterface $entityManager): JsonResponse
+    public function deleteUserById(int $id, UserRepository $repository, EntityManagerInterface $entityManager): JsonResponse
     {
         $user = $repository->find($id);
 
@@ -234,11 +215,9 @@ class UserController extends AbstractController
             'id' => $user->getId(),
             'nom' => $user->getNom(),
             'prenom' => $user->getPrenom(),
-            'age' => $user->getAge(),
+            'date_naissance' => $user->getDateNaissance()->format('d/m/Y'),
             'telephone' => $user->getTelephone(),
             'email' => $user->getUserIdentifier(),
-            'permis_de_conduire' => $user->getPermisDeConduire(),
-            'compte_valide' => $user->getCompteValide(),
             'solde' => $user->getSolde(),
 
         ];

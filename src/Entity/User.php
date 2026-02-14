@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 
 
@@ -25,8 +26,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255)]
     private ?string $prenom = null;
 
-    #[ORM\Column]
-    private ?int $age = null;
+    #[ORM\Column(type: 'date')]
+    #[Assert\Date]
+    private ?\DateTimeInterface $date_naissance = null;
 
     #[ORM\Column(length: 255)]
     private ?string $telephone = null;
@@ -37,55 +39,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255)]
     private ?string $mot_de_passe = null;
 
-    #[ORM\Column(nullable: true)]
-    private ?bool $permis_de_conduire = null;
-
-    #[ORM\Column]
-    private ?bool $compteValide = null;
-
-    #[ORM\OneToOne(mappedBy: 'User', cascade: ['persist', 'remove'])]
-    private ?Moderation $idModeration = null;
-
-    /**
-     * @var Collection<int, Trajet>
-     */
-    #[ORM\OneToMany(targetEntity: Trajet::class, mappedBy: 'User')]
-    private Collection $idTrajet;
-
-    /**
-     * @var Collection<int, Reservation>
-     */
-    #[ORM\OneToMany(targetEntity: Reservation::class, mappedBy: 'user')]
-    private Collection $idReservation;
 
     #[ORM\OneToOne(cascade: ['persist', 'remove'])]
     private ?Solde $solde = null;
 
-    /**
-     * @var Collection<int, Notification>
-     */
-    #[ORM\OneToMany(targetEntity: Notification::class, mappedBy: 'user')]
-    private Collection $idNotification;
-
-    /**
-     * @var Collection<int, Vehicule>
-     */
-    #[ORM\OneToMany(targetEntity: Vehicule::class, mappedBy: 'user')]
-    private Collection $idVehicule;
-
-    /**
-     * @var Collection<int, Avis>
-     */
-    #[ORM\OneToMany(targetEntity: Avis::class, mappedBy: 'user')]
-    private Collection $idAvis;
 
     public function __construct()
     {
-        $this->idTrajet = new ArrayCollection();
-        $this->idReservation = new ArrayCollection();
-        $this->idNotification = new ArrayCollection();
-        $this->idVehicule = new ArrayCollection();
-        $this->idAvis = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -117,15 +77,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getAge(): ?int
+    public function getDateNaissance(): ?\DateTimeInterface
     {
-        return $this->age;
+        return $this->date_naissance;
     }
 
-    public function setAge(int $age): static
+    public function setDateNaissance(\DateTimeInterface $date_naissance): static
     {
-        $this->age = $age;
-
+        $this->date_naissance = $date_naissance;
         return $this;
     }
 
@@ -165,65 +124,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    /**
-     * @return Collection<int, Trajet>
-     */
-    public function getIdTrajet(): Collection
-    {
-        return $this->idTrajet;
-    }
-
-    public function addIdTrajet(Trajet $idTrajet): static
-    {
-        if (!$this->idTrajet->contains($idTrajet)) {
-            $this->idTrajet->add($idTrajet);
-            $idTrajet->setUser($this);
-        }
-
-        return $this;
-    }
-
-    public function removeIdTrajet(Trajet $idTrajet): static
-    {
-        if ($this->idTrajet->removeElement($idTrajet)) {
-            // set the owning side to null (unless already changed)
-            if ($idTrajet->getUser() === $this) {
-                $idTrajet->setUser(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Reservation>
-     */
-    public function getIdReservation(): Collection
-    {
-        return $this->idReservation;
-    }
-
-    public function addIdReservation(Reservation $idReservation): static
-    {
-        if (!$this->idReservation->contains($idReservation)) {
-            $this->idReservation->add($idReservation);
-            $idReservation->setUser($this);
-        }
-
-        return $this;
-    }
-
-    public function removeIdReservation(Reservation $idReservation): static
-    {
-        if ($this->idReservation->removeElement($idReservation)) {
-            // set the owning side to null (unless already changed)
-            if ($idReservation->getUser() === $this) {
-                $idReservation->setUser(null);
-            }
-        }
-
-        return $this;
-    }
 
     public function getSolde(): ?Solde
     {
@@ -237,100 +137,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    /**
-     * @return Collection<int, Notification>
-     */
-    public function getIdNotification(): Collection
-    {
-        return $this->idNotification;
-    }
-
-    public function addIdNotification(Notification $idNotification): static
-    {
-        if (!$this->idNotification->contains($idNotification)) {
-            $this->idNotification->add($idNotification);
-            $idNotification->setUser($this);
-        }
-
-        return $this;
-    }
-
-    public function removeIdNotification(Notification $idNotification): static
-    {
-        if ($this->idNotification->removeElement($idNotification)) {
-            // set the owning side to null (unless already changed)
-            if ($idNotification->getUser() === $this) {
-                $idNotification->setUser(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Vehicule>
-     */
-    public function getIdVehicule(): Collection
-    {
-        return $this->idVehicule;
-    }
-
-    public function addIdVehicule(Vehicule $idVehicule): static
-    {
-        if (!$this->idVehicule->contains($idVehicule)) {
-            $this->idVehicule->add($idVehicule);
-            $idVehicule->setUser($this);
-        }
-
-        return $this;
-    }
-
-    public function removeIdVehicule(Vehicule $idVehicule): static
-    {
-        if ($this->idVehicule->removeElement($idVehicule)) {
-            // set the owning side to null (unless already changed)
-            if ($idVehicule->getUser() === $this) {
-                $idVehicule->setUser(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Avis>
-     */
-    public function getIdAvis(): Collection
-    {
-        return $this->idAvis;
-    }
-
-    public function addIdAvi(Avis $idAvi): static
-    {
-        if (!$this->idAvis->contains($idAvi)) {
-            $this->idAvis->add($idAvi);
-            $idAvi->setUser($this);
-        }
-
-        return $this;
-    }
-
-    public function removeIdAvi(Avis $idAvi): static
-    {
-        if ($this->idAvis->removeElement($idAvi)) {
-            // set the owning side to null (unless already changed)
-            if ($idAvi->getUser() === $this) {
-                $idAvi->setUser(null);
-            }
-        }
-
-        return $this;
-    }
 
     // FONCTION QUI NE NOUS SERT A RIEN POUR LE MOMENT ET QU'ON UTILISERA SUREMENT PAS 
     // MAIS SINON LES INTERFACES POSENT DES SOUCIS
-        public function getRoles(): array
-        {
-            return [];
-        }
+    public function getRoles(): array
+    {
+        return [];
+    }
 }
