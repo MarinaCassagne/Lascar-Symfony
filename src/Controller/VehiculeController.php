@@ -65,10 +65,6 @@ class VehiculeController extends AbstractController
             return $this->errorResponse('Unauthorized.', Response::HTTP_UNAUTHORIZED);
         }
 
-        if ($user->isPermisDeConduire() === false) {
-            return $this->errorResponse("Vous n'avez pas le permis ou vous ne l'avez pas renseigner", Response::HTTP_BAD_REQUEST);
-        }
-
         $vehicule = (new Vehicule())
             ->setMarque($marque)
             ->setModele($modele)

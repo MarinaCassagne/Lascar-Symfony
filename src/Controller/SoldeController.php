@@ -88,9 +88,13 @@ final class SoldeController extends AbstractController
 
     #[Route('api/solde/{id}', name: 'app_solde_delete', methods: ['DELETE'])]
     public function delete(
-        Solde $solde,
+        int $id,
+        SoldeRepository $repository,
         EntityManagerInterface $entityManager
     ): Response {
+
+        $solde = $repository->find($id);
+        
         $entityManager->remove($solde);
         $entityManager->flush();
 

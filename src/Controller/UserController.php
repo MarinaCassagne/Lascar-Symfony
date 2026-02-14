@@ -6,6 +6,9 @@ use App\Entity\User;
 use App\Entity\Solde;
 use App\Repository\UserRepository;
 use App\Repository\SoldeRepository;
+use App\Controller\SoldeController;
+use App\Controller\VehiculeController;
+use App\Repository\VehiculeRepository;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -207,24 +210,37 @@ class UserController extends AbstractController
     }
 
     #[Route('/api/users/{id}', name: 'api_users_delete', methods: ['DELETE'])]
-    public function deleteUserById(int $id, UserRepository $repository, EntityManagerInterface $entityManager, SoldeRepository $soldeRepository): JsonResponse
-    {
-        $user = $repository->find($id);
-
+    public function deleteUserById(
+        int $id,
+        UserRepository $userRepository,
+        EntityManagerInterface $entityManager,
+        SoldeRepository $soldeRepository,
+        VehiculeRepository $vehiculeRepository
+    ): JsonResponse {
+        $user = $userRepository->find($id);
         if (!$user) {
-            return $this->errorResponse('user not found.', Response::HTTP_NOT_FOUND);
+            return $this->errorResponse('User not found.', Response::HTTP_NOT_FOUND);
         }
 
+        // 1️⃣ Supprimer le solde lié
         $solde = $soldeRepository->findOneBy(['user' => $user]);
         if ($solde) {
             $entityManager->remove($solde);
         }
 
+        // 2️⃣ Supprimer tous les véhicules liés
+        $vehicules = $vehiculeRepository->findBy(['user' => $user]);
+        foreach ($vehicules as $vehicule) {
+            $entityManager->remove($vehicule);
+        }
+
+        // 3️⃣ Supprimer l'utilisateur
         $entityManager->remove($user);
         $entityManager->flush();
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
     }
+
 
     private function decodeJson(Request $request): ?array
     {
