@@ -20,8 +20,31 @@ use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 class UserController extends AbstractController
 {
     #[Route('/api/login', name: 'api_users_login', methods: ['POST'])]
-    public function login(): void
-    {
+    public function login(
+        Request $request,
+        UserRepository $repository,
+        UserPasswordHasherInterface $passwordHasher,
+        JWTTokenManagerInterface $jwtManager
+    ): JsonResponse {
+
+        $data = json_decode($request->getContent(), true);
+
+        if (!isset($data['email'], $data['mot_de_passe'])) {
+            return $this->json(['message' => 'Invalid credentials.'], 400);
+        }
+
+        $user = $repository->findOneBy(['email' => $data['email']]);
+
+        if (!$user || !$passwordHasher->isPasswordValid($user, $data['mot_de_passe'])) {
+            return $this->json(['message' => 'Invalid credentials.'], 401);
+        }
+
+        $token = $jwtManager->create($user);
+
+        return $this->json([
+            'token' => $token,
+            'user' => $this->serializeUser($user)
+        ]);
     }
 
     #[Route('/api/users', name: 'api_users_list', methods: ['GET'])]

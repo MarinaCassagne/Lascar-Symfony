@@ -10,16 +10,6 @@ security:
                 property: email
 
     firewalls:
-        login:
-            pattern: ^/api/login
-            stateless: true
-            json_login:
-                check_path: /api/login
-                username_path: email
-                password_path: mot_de_passe
-                success_handler: lexik_jwt_authentication.handler.authentication_success
-                failure_handler: lexik_jwt_authentication.handler.authentication_failure
-
         api:
             pattern: ^/api
             stateless: true
