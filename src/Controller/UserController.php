@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Entity\Solde;
 use App\Repository\UserRepository;
+use App\Repository\SoldeRepository;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -206,12 +207,17 @@ class UserController extends AbstractController
     }
 
     #[Route('/api/users/{id}', name: 'api_users_delete', methods: ['DELETE'])]
-    public function deleteUserById(int $id, UserRepository $repository, EntityManagerInterface $entityManager): JsonResponse
+    public function deleteUserById(int $id, UserRepository $repository, EntityManagerInterface $entityManager, SoldeRepository $soldeRepository): JsonResponse
     {
         $user = $repository->find($id);
 
         if (!$user) {
             return $this->errorResponse('user not found.', Response::HTTP_NOT_FOUND);
+        }
+
+        $solde = $soldeRepository->findOneBy(['user' => $user]);
+        if ($solde) {
+            $entityManager->remove($solde);
         }
 
         $entityManager->remove($user);
