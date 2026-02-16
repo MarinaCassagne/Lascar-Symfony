@@ -31,7 +31,7 @@ class UserController extends AbstractController
         JWTTokenManagerInterface $jwtManager
     ): JsonResponse {
 
-        $data = json_decode($request->getContent(), true);
+        $data = $this->decodeJson($request);
 
         if (!isset($data['email'], $data['mot_de_passe'])) {
             return $this->json(['message' => 'Invalid credentials.'], 400);
