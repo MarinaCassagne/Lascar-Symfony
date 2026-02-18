@@ -31,16 +31,25 @@ final class TrajetController extends AbstractController
     // ========================================================================
 
     // Lister les trajets sous format JSON
-    public function listTrajets(TrajetRepository $trajetRepository): JsonResponse
+    public function listTrajets(Request $request, TrajetRepository $trajetRepository): JsonResponse
     {
-        // Permet de mettre dans un tableau le résulat de la fonction 
-        $trajets = array_map(
+        $limit = $request->query->get('limit');
 
-            fn(Trajet $trajet) => $this->serializeTrajet($trajet),
+        if($limit){
+            $trajets =array_map(
+                fn(Trajet $trajet) => $this->serializeTrajet($trajet),
+                $trajetRepository->findBy([], null, (int) $limit)
+            );
+        }else{
+            // Permet de mettre dans un tableau le résulat de la fonction 
+            $trajets = array_map(
 
-            // Récupère tous les trajets de la BDD
-            $trajetRepository->findAll()
-        );
+                fn(Trajet $trajet) => $this->serializeTrajet($trajet),
+
+                // Récupère tous les trajets de la BDD
+                $trajetRepository->findAll()
+            );   
+        }
 
         // Renvoie un tableau des trajets en format JSON avec le code HTTP 200, si réponse serveur (OK)
         return $this->json($trajets);
@@ -257,10 +266,6 @@ final class TrajetController extends AbstractController
 
         if (!$user) {
             return $this->errorResponse('Unauthorized.', Response::HTTP_UNAUTHORIZED);
-        }
-
-        if ($user->isPermisDeConduire() === false) {
-            return $this->errorResponse("Vous n'avez pas le permis ou vous ne l'avez pas renseigner", Response::HTTP_BAD_REQUEST);
         }
 
         // //======== ID ÉTAPE TRAJET ========
