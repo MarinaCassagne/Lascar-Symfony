@@ -54,7 +54,7 @@ class UserController extends AbstractController
         $refreshTokenManager->save($refreshToken);
 
         return $this->json([
-            'token' => "Bearer $token",
+            'token' => $token,
             'refresh_token' => $refreshToken->getRefreshToken(),
             'user' => $this->serializeUser($user)
         ]);
