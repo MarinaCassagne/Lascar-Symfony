@@ -13,3 +13,6 @@ controllers:
 api_login:
    path: /api/login
 
+api_refresh_token:
+    path: /api/token/refresh
+

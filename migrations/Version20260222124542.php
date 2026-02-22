@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20260214001246 extends AbstractMigration
+final class Version20260222124542 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -24,6 +24,7 @@ final class Version20260214001246 extends AbstractMigration
         $this->addSql('CREATE TABLE etape_trajet (id INT AUTO_INCREMENT NOT NULL, latitude_etape DOUBLE PRECISION NOT NULL, longitude_etape DOUBLE PRECISION NOT NULL, trajet_id INT DEFAULT NULL, INDEX IDX_9C566F33D12A823 (trajet_id), PRIMARY KEY (id)) DEFAULT CHARACTER SET utf8mb4');
         $this->addSql('CREATE TABLE moderation (id INT AUTO_INCREMENT NOT NULL, motif LONGTEXT NOT NULL, date_de_creation DATETIME NOT NULL, canal_de_moderation LONGTEXT NOT NULL, type_de_cible VARCHAR(255) NOT NULL, action_de_moderation VARCHAR(255) NOT NULL, id_trajet_id INT DEFAULT NULL, avis_id INT DEFAULT NULL, user_id INT DEFAULT NULL, UNIQUE INDEX UNIQ_C0EA6AA48D271404 (id_trajet_id), UNIQUE INDEX UNIQ_C0EA6AA4197E709F (avis_id), UNIQUE INDEX UNIQ_C0EA6AA4A76ED395 (user_id), PRIMARY KEY (id)) DEFAULT CHARACTER SET utf8mb4');
         $this->addSql('CREATE TABLE notification (id INT AUTO_INCREMENT NOT NULL, titre VARCHAR(255) NOT NULL, description LONGTEXT NOT NULL, date_notification DATETIME NOT NULL, canal_de_notification VARCHAR(255) NOT NULL, statut_notification VARCHAR(255) NOT NULL, user_id INT DEFAULT NULL, INDEX IDX_BF5476CAA76ED395 (user_id), PRIMARY KEY (id)) DEFAULT CHARACTER SET utf8mb4');
+        $this->addSql('CREATE TABLE refresh_tokens (refresh_token VARCHAR(128) NOT NULL, username VARCHAR(255) NOT NULL, valid DATETIME NOT NULL, id INT AUTO_INCREMENT NOT NULL, UNIQUE INDEX UNIQ_9BACE7E1C74F2195 (refresh_token), PRIMARY KEY (id)) DEFAULT CHARACTER SET utf8mb4');
         $this->addSql('CREATE TABLE reservation (id INT AUTO_INCREMENT NOT NULL, numero_reservation VARCHAR(255) NOT NULL, date_reservation DATETIME NOT NULL, lieu_depart VARCHAR(255) NOT NULL, lieu_arrivee VARCHAR(255) NOT NULL, longitude_point_de_depart_passager DOUBLE PRECISION NOT NULL, latitude_point_de_depart_passager DOUBLE PRECISION NOT NULL, longitude_point_arrive_passager DOUBLE PRECISION NOT NULL, latitude_point_arrive_passager DOUBLE PRECISION NOT NULL, date_heure_depart DATETIME NOT NULL, date_heure_arrive DATETIME NOT NULL, nombre_de_passager SMALLINT NOT NULL, montant_total_reservation NUMERIC(5, 2) NOT NULL, statut_reservation VARCHAR(255) NOT NULL, trajet_id INT DEFAULT NULL, user_id INT DEFAULT NULL, INDEX IDX_42C84955D12A823 (trajet_id), INDEX IDX_42C84955A76ED395 (user_id), PRIMARY KEY (id)) DEFAULT CHARACTER SET utf8mb4');
         $this->addSql('CREATE TABLE solde (id INT AUTO_INCREMENT NOT NULL, montant_solde NUMERIC(5, 2) NOT NULL, user_id INT DEFAULT NULL, INDEX IDX_66918367A76ED395 (user_id), PRIMARY KEY (id)) DEFAULT CHARACTER SET utf8mb4');
         $this->addSql('CREATE TABLE trajet (id INT AUTO_INCREMENT NOT NULL, date_de_depart DATETIME NOT NULL, lieu_depart_conducteur VARCHAR(255) NOT NULL, lieu_arrivee_conducteur VARCHAR(255) NOT NULL, longitude_lieu_depart_conducteur DOUBLE PRECISION NOT NULL, latitude_lieu_depart_conducteur DOUBLE PRECISION NOT NULL, longitude_lieu_arrive_conducteur DOUBLE PRECISION NOT NULL, latitude_lieu_arrive_conducteur DOUBLE PRECISION NOT NULL, duree INT NOT NULL, nombre_de_km INT NOT NULL, nombre_de_place INT NOT NULL, prix NUMERIC(5, 2) NOT NULL, date_de_publication DATETIME NOT NULL, nature_trajet VARCHAR(255) NOT NULL, type_trajet VARCHAR(255) NOT NULL, statut_valide VARCHAR(255) NOT NULL, user_id INT DEFAULT NULL, INDEX IDX_2B5BA98CA76ED395 (user_id), PRIMARY KEY (id)) DEFAULT CHARACTER SET utf8mb4');
@@ -68,6 +69,7 @@ final class Version20260214001246 extends AbstractMigration
         $this->addSql('DROP TABLE etape_trajet');
         $this->addSql('DROP TABLE moderation');
         $this->addSql('DROP TABLE notification');
+        $this->addSql('DROP TABLE refresh_tokens');
         $this->addSql('DROP TABLE reservation');
         $this->addSql('DROP TABLE solde');
         $this->addSql('DROP TABLE trajet');

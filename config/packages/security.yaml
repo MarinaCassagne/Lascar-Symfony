@@ -1,7 +1,8 @@
 security:
     password_hashers:
         App\Entity\User:
-            algorithm: auto
+            algorithm: bcrypt
+            cost: 4
 
     providers:
         app_user_provider:
@@ -10,6 +11,10 @@ security:
                 property: email
 
     firewalls:
+        refresh:
+            pattern: ^/api/token/refresh
+            stateless: true
+            refresh_jwt: ~
         api:
             pattern: ^/api
             stateless: true
@@ -19,4 +24,5 @@ security:
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/users/register, roles: PUBLIC_ACCESS }
         - { path: ^/api/trajets, roles: PUBLIC_ACCESS }
+        - { path: ^/api/(login|token/refresh), roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }

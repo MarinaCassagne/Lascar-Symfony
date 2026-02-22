@@ -46,7 +46,7 @@ class UserController extends AbstractController
         $token = $jwtManager->create($user);
 
         return $this->json([
-            'token' => " Baerer $token",
+            'token' => " Bearer $token",
             'user' => $this->serializeUser($user)
         ]);
     }
