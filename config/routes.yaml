@@ -10,9 +10,11 @@
 controllers:
     resource: routing.controllers
 
+# route pour le login
 api_login:
    path: /api/login
 
+# route pour refresh le token
 api_refresh_token:
     path: /api/token/refresh
 

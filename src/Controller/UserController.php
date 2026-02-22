@@ -18,6 +18,8 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use Gesdinet\JWTRefreshTokenBundle\Generator\RefreshTokenGeneratorInterface;
+use Gesdinet\JWTRefreshTokenBundle\Model\RefreshTokenManagerInterface;
 
 
 
@@ -28,7 +30,9 @@ class UserController extends AbstractController
         Request $request,
         UserRepository $repository,
         UserPasswordHasherInterface $passwordHasher,
-        JWTTokenManagerInterface $jwtManager
+        JWTTokenManagerInterface $jwtManager,
+        RefreshTokenGeneratorInterface $refreshTokenGenerator,
+        RefreshTokenManagerInterface $refreshTokenManager
     ): JsonResponse {
 
         $data = $this->decodeJson($request);
@@ -45,8 +49,13 @@ class UserController extends AbstractController
 
         $token = $jwtManager->create($user);
 
+        // Génération du refresh token
+        $refreshToken = $refreshTokenGenerator->createForUserWithTtl($user, 604800);
+        $refreshTokenManager->save($refreshToken);
+
         return $this->json([
-            'token' => " Bearer $token",
+            'token' => "Bearer $token",
+            'refresh_token' => $refreshToken->getRefreshToken(),
             'user' => $this->serializeUser($user)
         ]);
     }
