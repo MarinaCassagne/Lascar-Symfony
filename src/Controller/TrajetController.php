@@ -223,33 +223,6 @@ final class TrajetController extends AbstractController
             );
         }
 
-        //======== STATUT VALIDE TRAJET =============
-
-        // Récupérer le statut valide du trajet dans la requête (EN_ATTENTE, VALIDE, REFUSE)
-        $statut_valide = $data['statut_valide'] ?? '';
-
-        // Si le statut valide du trajet n'est pas égale à un élément de l'enum, 
-        // TODO https://symfony.com/doc/current/ai/components/agent.html#automatic-enum-validation
-
-        // Alors retourner une erreur.
-        // return $this->errorResponse(' Valid trip status is invalid (EN_ATTENTE, VALIDE, REFUSE).', Response::HTTP_BAD_REQUEST);
-
-
-        // Si le statut du trajet n'est pas renseigné,
-        if ($statut_valide === '') {
-            // Alors retourner une erreur avec le code HTTP (HperTexte Transfer Protocol) 400.
-            return $this->errorResponse('Valid trip status is required.', Response::HTTP_BAD_REQUEST);
-        }
-
-        try {
-            $statut_valide = StatutValidTrajet::from($statut_valide);
-        } catch (\ValueError $e) {
-            return $this->errorResponse(
-                'Statut of the journey must be "En attente", "Valide" , or "Refusé" .',
-                Response::HTTP_BAD_REQUEST
-            );
-        }
-
 
         //======== DATE DE PUBLICATION ================
 
@@ -297,7 +270,6 @@ final class TrajetController extends AbstractController
             ->setPrix($prix)
             ->setNatureTrajet($nature_trajet)
             ->setTypeTrajet($type_trajet)
-            ->setStatutValide($statut_valide)
             ->setDateDePublication($date_publication)
             ->setUser($user);
         // ->addIdEtapeTrajet($idEtapeTrajet)

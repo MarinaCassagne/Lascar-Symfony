@@ -72,7 +72,7 @@ class Trajet
     private ?TypeTrajet $type_trajet = null;
 
     #[ORM\Column(enumType: StatutValidTrajet::class)]
-    private ?StatutValidTrajet $statut_valide = null;
+    private StatutValidTrajet $statut_valide;
 
     #[ORM\OneToOne(mappedBy: 'idTrajet', cascade: ['persist', 'remove'])]
     private ?Moderation $idModeration = null;
@@ -94,6 +94,7 @@ class Trajet
 
     public function __construct()
     {
+        $this->statut_valide = StatutValidTrajet::Valide;
         $this->idEtapeTrajet = new ArrayCollection();
         $this->idReservation = new ArrayCollection();
        
