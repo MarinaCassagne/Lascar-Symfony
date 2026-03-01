@@ -8,4 +8,14 @@ use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 class Kernel extends BaseKernel
 {
     use MicroKernelTrait;
+
+    public function getCacheDir(): string
+    {
+        return sys_get_temp_dir() . '/lascar_symfony/' . $this->getEnvironment();
+    }
+
+    public function getLogDir(): string
+    {
+        return sys_get_temp_dir() . '/lascar_symfony/log';
+    }
 }
