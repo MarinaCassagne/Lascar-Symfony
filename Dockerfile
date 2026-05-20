@@ -18,13 +18,14 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Définir le dossier de travail
 WORKDIR /var/www
 
-# Copier le projet
-COPY . .
+# Copier uniquement les fichiers de dépendances
+COPY composer.json composer.lock ./
 
-# Installer les dépendances Symfony
-RUN composer install
+# Installer les dépendances (sans scripts, le projet n'est pas encore monté)
+RUN composer install --no-scripts --optimize-autoloader
 
 # Exposer le port
 EXPOSE 8000
 
-CMD ["php", "-S", "0.0.0.0:8000", "-t", "public"]
+# Script de démarrage : installe le vendor si absent, puis lance le serveur
+CMD ["sh", "-c", "composer install --no-scripts && php -S 0.0.0.0:8000 -t public"]
