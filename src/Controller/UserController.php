@@ -101,8 +101,13 @@ class UserController extends AbstractController
 
         $prenom = trim((string) ($data['prenom'] ?? ''));
 
-        $date_naissance = trim((string) ($data['date_naissance']));
-        $date = \DateTime::createFromFormat('d/m/Y', $date_naissance);
+        $date_naissance = trim((string) ($data['date_naissance'] ?? ''));
+        $date = DateTime::createFromFormat('Y-m-d', $date_naissance)
+            ?: DateTime::createFromFormat('d/m/Y', $date_naissance);
+
+        if (!$date) {
+            return $this->errorResponse('Format de date invalide. Attendu : YYYY-MM-DD ou DD/MM/YYYY.', Response::HTTP_BAD_REQUEST);
+        }
 
         $telephone = trim((string) ($data['telephone'] ?? ''));
 
